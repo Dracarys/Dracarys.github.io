@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="关于osip2和eXosip2是什么这里不比多说，相信看到找到此片文章的都已十分清楚sip协议栈。本文的重点在与如何在Mac平台上以iOS为目标平台交叉编译osip2和eXosip2。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在Mac上为iOS交叉编译osip2和eXosip2">
+<meta property="og:url" content="https://dracarys.github.io/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="关于osip2和eXosip2是什么这里不比多说，相信看到找到此片文章的都已十分清楚sip协议栈。本文的重点在与如何在Mac平台上以iOS为目标平台交叉编译osip2和eXosip2。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-08-05T07:47:12.000Z">
+<meta property="article:modified_time" content="2017-02-13T14:28:33.000Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="osip2">
+<meta property="article:tag" content="eXosip2">
+<meta property="article:tag" content="交叉编译">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>在Mac上为iOS交叉编译osip2和eXosip2 | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">编译配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#iOS-%E6%A8%A1%E6%8B%9F%E5%99%A8"><span class="nav-number">1.1.</span> <span class="nav-text">iOS 模拟器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#iOS-%E8%AE%BE%E5%A4%87"><span class="nav-number">1.2.</span> <span class="nav-text">iOS 设备</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B%E7%BC%96%E8%AF%91"><span class="nav-number">2.</span> <span class="nav-text">开始编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E9%9D%99%E6%80%81%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">合并静态库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">4.</span> <span class="nav-text">最后</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在Mac上为iOS交叉编译osip2和eXosip2
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2016-08-05 15:47:12" itemprop="dateCreated datePublished" datetime="2016-08-05T15:47:12+08:00">2016-08-05</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2017-02-13 22:28:33" itemprop="dateModified" datetime="2017-02-13T22:28:33+08:00">2017-02-13</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C-%E8%AF%AD%E8%A8%80/" itemprop="url" rel="index"><span itemprop="name">C 语言</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>关于osip2和eXosip2是什么这里不比多说，相信看到找到此片文章的都已十分清楚sip协议栈。本文的重点在与如何在Mac平台上以iOS为目标平台交叉编译osip2和eXosip2。</p>
+<a id="more"></a>
+
+<p>下面以iOS模拟器和iOS真实设备为目标平台，分别列出编译配置：</p>
+<h2 id="编译配置"><a href="#编译配置" class="headerlink" title="编译配置"></a>编译配置</h2><h3 id="iOS-模拟器"><a href="#iOS-模拟器" class="headerlink" title="iOS 模拟器"></a>iOS 模拟器</h3><ul>
+<li>osip2</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ .<span class="regexp">/configure CC=/</span>Applications<span class="regexp">/Xcode.app/</span>Contents<span class="regexp">/Developer/</span>Toolchains<span class="regexp">/XcodeDefault.xctoolchain/u</span>sr<span class="regexp">/bin/</span>clang CFLAGS=<span class="string">&quot;-O2 -m32 -mios-simulator-version-min=5.0 -DPJ_SDK_NAME=&quot;</span>\<span class="string">&quot;iPhoneSimulator7.1.sdk\&quot;&quot;</span> -arch i386 -isysroot <span class="regexp">/Applications/</span>Xcode.app<span class="regexp">/Contents/</span>Developer<span class="regexp">/Platforms/i</span>PhoneSimulator.platform<span class="regexp">/Developer/</span>SDKs<span class="regexp">/iPhoneSimulator7.1.sdk&quot; --host=arm-apple-darwin9 --target=arm-apple-darwin9 --prefix=/</span>Users<span class="regexp">/noone/</span>Documents<span class="regexp">/siplibs/i</span>386</span><br></pre></td></tr></table></figure>
+<ul>
+<li>eXosip2</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$.<span class="regexp">/configure CC=/</span>Applications<span class="regexp">/Xcode.app/</span>Contents<span class="regexp">/Developer/</span>Toolchains<span class="regexp">/XcodeDefault.xctoolchain/u</span>sr<span class="regexp">/bin/</span>clang CFLAGS=<span class="string">&quot;-O2 -m32 -mios-simulator-version-min=5.0 -DPJ_SDK_NAME=&quot;</span>\<span class="string">&quot;iPhoneSimulator7.1.sdk\&quot;&quot;</span> -arch i386 -isysroot <span class="regexp">/Applications/</span>Xcode.app<span class="regexp">/Contents/</span>Developer<span class="regexp">/Platforms/i</span>PhoneSimulator.platform<span class="regexp">/Developer/</span>SDKs<span class="regexp">/iPhoneSimulator7.1.sdk&quot; LDFLAGS=&quot; -framework MobileCoreServices -framework CFNetwork -framework CoreFoundation&quot; --disable-openssl --host=arm-apple-darwin9 --target=arm-apple-darwin9 --prefix=/</span>Users<span class="regexp">/noone/</span>Documents<span class="regexp">/siplibs/i</span>386</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="iOS-设备"><a href="#iOS-设备" class="headerlink" title="iOS 设备"></a>iOS 设备</h3><ul>
+<li>osip2</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ .<span class="regexp">/configure CC=/</span>Applications<span class="regexp">/Xcode.app/</span>Contents<span class="regexp">/Developer/</span>Toolchains<span class="regexp">/XcodeDefault.xctoolchain/u</span>sr<span class="regexp">/bin/</span>clang CFLAGS=<span class="string">&quot;-DPJ_SDK_NAME=&quot;</span>\<span class="string">&quot;iPhoneOS7.1.sdk\&quot;&quot;</span> -arch armv7 -isysroot <span class="regexp">/Applications/</span>Xcode.app<span class="regexp">/Contents/</span>Developer<span class="regexp">/Platforms/i</span>PhoneOS.platform<span class="regexp">/Developer/</span>SDKs<span class="regexp">/iPhoneOS7.1.sdk&quot; --host=arm-apple-darwin9 --target=arm-apple-darwin9 --prefix=/</span>Users<span class="regexp">/noone/</span>Documents<span class="regexp">/siplibs/</span>arm</span><br></pre></td></tr></table></figure>
+<ul>
+<li>eXosip2</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ .<span class="regexp">/configure CC=/</span>Applications<span class="regexp">/Xcode.app/</span>Contents<span class="regexp">/Developer/</span>Toolchains<span class="regexp">/XcodeDefault.xctoolchain/u</span>sr<span class="regexp">/bin/</span>clang CFLAGS=<span class="string">&quot;-DPJ_SDK_NAME=&quot;</span>\<span class="string">&quot;iPhoneOS7.1.sdk\&quot;&quot;</span> -arch armv7 -isysroot <span class="regexp">/Applications/</span>Xcode.app<span class="regexp">/Contents/</span>Developer<span class="regexp">/Platforms/i</span>PhoneOS.platform<span class="regexp">/Developer/</span>SDKs<span class="regexp">/iPhoneOS7.1.sdk&quot; LDFLAGS=&quot; -framework MobileCoreServices -framework CFNetwork -framework CoreFoundation&quot; --disable-openssl --host=arm-apple-darwin9 --target=arm-apple-darwin9 --prefix=/</span>Users<span class="regexp">/noone/</span>Documents<span class="regexp">/siplibs/</span>arm</span><br></pre></td></tr></table></figure>
+
+<h2 id="开始编译"><a href="#开始编译" class="headerlink" title="开始编译"></a>开始编译</h2><p>通过上文的配置，生成相应的<strong>make</strong>文件，然后在终端中执行如下命令：</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"><span class="meta-keyword">$make</span></span></span><br><span class="line"><span class="meta"><span class="meta-keyword">$make</span> install</span></span><br></pre></td></tr></table></figure>
+<p>待编译完毕，即可在我们刚刚通过*–prefix*参数配置的输出目录中找到编译好的哭文件。</p>
+<h2 id="合并静态库"><a href="#合并静态库" class="headerlink" title="合并静态库"></a>合并静态库</h2><p>仅为真实设备编译一个静态库，会导致项目不能在模拟器上运行，这个项目调试带来很多不便，怎么才能既能在模拟器运行，又能在真机上运行呢？可以分别编译两个目标静态库，然后再将两个库合二为一。合并方法如下：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$lipo</span> -create <span class="regexp">/Users/</span>noone<span class="regexp">/Desktop/</span>arm<span class="regexp">/lib/</span>libeXosip2.a <span class="regexp">/Users/</span>noone<span class="regexp">/Desktop/i</span>386<span class="regexp">/lib/</span>libeXosip2.a -output <span class="regexp">/Users/</span>noone<span class="regexp">/Desktop/</span>libs/libeXosip2_for_ios.a</span><br></pre></td></tr></table></figure>
+
+<p>以上命令中所涉及的两个libeXosip2.a就是我们刚刚编译的分别对应模拟器和真机的静态库，’-output’参数用于指明输出位置和文件名。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>将静态库引入项目时，注意还需引入<strong>libresolv.9.dylib</strong>这个依赖库，方能编译成功。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/" title="在Mac上为iOS交叉编译osip2和eXosip2">https://dracarys.github.io/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/osip2/" rel="tag"><i class="fa fa-tag"></i> osip2</a>
+              <a href="/tags/eXosip2/" rel="tag"><i class="fa fa-tag"></i> eXosip2</a>
+              <a href="/tags/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" rel="tag"><i class="fa fa-tag"></i> 交叉编译</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/08/02/How-to-create-an-Uber-splash-screen/" rel="prev" title="【译】高仿Uber启动页">
+                  <i class="fa fa-chevron-left"></i> 【译】高仿Uber启动页
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2016/08/19/Pattern-matching-in-Swift/" rel="next" title="【译】Swift 中的模式匹配">
+                  【译】Swift 中的模式匹配 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : 'fe7375e46f0df20cbb2c92600aa1c698',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

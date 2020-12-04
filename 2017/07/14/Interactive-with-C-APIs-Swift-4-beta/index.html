@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="作为与 Objective-C 交互的一部分，Swift 对 C 语言的类型和特性也提供了良好的兼容。Swift还提供了相应的交互方式，以便在需要时可以在代码中使用常见的 C 结构模式。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】Swift与 C API的交互（Swift 4 beta）">
+<meta property="og:url" content="https://dracarys.github.io/2017/07/14/Interactive-with-C-APIs-Swift-4-beta/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="作为与 Objective-C 交互的一部分，Swift 对 C 语言的类型和特性也提供了良好的兼容。Swift还提供了相应的交互方式，以便在需要时可以在代码中使用常见的 C 结构模式。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-07-14T12:54:30.000Z">
+<meta property="article:modified_time" content="2018-12-18T14:23:15.000Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="Swift">
+<meta property="article:tag" content="C 语言">
+<meta property="article:tag" content="混编">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2017/07/14/Interactive-with-C-APIs-Swift-4-beta/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>【译】Swift与 C API的交互（Swift 4 beta） | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">基本类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%B8%B8%E9%87%8F"><span class="nav-number">2.</span> <span class="nav-text">全局常量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5%E7%9A%84%E6%9E%9A%E4%B8%BE%E5%92%8C%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">2.1.</span> <span class="nav-text">导入的枚举和结构体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%98%E5%8F%82%E5%87%BD%E6%95%B0-Variadic-Functions"><span class="nav-number">2.2.</span> <span class="nav-text">变参函数(Variadic Functions)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">3.</span> <span class="nav-text">结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%86%E5%87%BD%E6%95%B0%E5%BC%95%E5%85%A5%E4%B8%BA%E7%B1%BB%E5%9E%8B%E6%88%90%E5%91%98"><span class="nav-number">3.1.</span> <span class="nav-text">将函数引入为类型成员</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%9A%E4%B8%BE"><span class="nav-number">4.</span> <span class="nav-text">枚举</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%89%E9%A1%B9%E5%9E%8B%E6%9E%9A%E4%B8%BE%EF%BC%88Option-sets%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">选项型枚举（Option sets）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%94%E5%90%88%E4%BD%93%EF%BC%88Unions%EF%BC%89%EF%BC%88%E8%AF%91%E8%80%85%E6%B3%A8%EF%BC%9A%E8%AF%A5%E9%83%A8%E5%88%86%E4%B8%BA%E6%96%B0%E5%A2%9E%E5%8A%A0%E5%86%85%E5%AE%B9%E4%B8%AA%EF%BC%8CSwift-3-%E6%98%AF%E4%B8%8D%E6%94%AF%E6%8C%81%E7%9A%84%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">联合体（Unions）（译者注：该部分为新增加内容个，Swift 3 是不支持的）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%8D%E5%9F%9F%EF%BC%88Bit-Fields%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">位域（Bit Fields）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8C%BF%E5%90%8D%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93%E5%92%8C%E8%81%94%E5%90%88%E4%BD%93%E5%9F%9F%EF%BC%88Union-Fields%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">匿名的结构体和联合体域（Union Fields）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88"><span class="nav-number">5.</span> <span class="nav-text">指针</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F%E6%8C%87%E9%92%88"><span class="nav-number">5.1.</span> <span class="nav-text">常量指针</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E5%8F%98%E6%8C%87%E9%92%88%EF%BC%88Mutable-Pointers%EF%BC%89"><span class="nav-number">5.2.</span> <span class="nav-text">可变指针（Mutable Pointers）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%A9%BA%E9%97%B4%E8%AE%A1%E7%AE%97%EF%BC%88Data-Type-Size-Calculation%EF%BC%89%EF%BC%88%E8%AF%91%E8%80%85%E6%B3%A8%EF%BC%9A%E6%B3%A8%E6%84%8F%E8%AF%A5%E9%83%A8%E5%88%86%E5%86%85%E5%AE%B9%E5%8F%98%E5%8A%A8%E5%BE%88%E5%A4%A7%EF%BC%89"><span class="nav-number">5.3.</span> <span class="nav-text">数据类型空间计算（Data Type Size Calculation）（译者注：注意该部分内容变动很大）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%85%E4%B8%80%E6%AC%A1%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%88One-Time-Initialization%EF%BC%89"><span class="nav-number">6.</span> <span class="nav-text">仅一次的初始化（One-Time Initialization）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4"><span class="nav-number">7.</span> <span class="nav-text">预处理命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%AE%8F%E5%91%BD%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text">简单宏命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E6%9D%82%E5%AE%8F%E5%91%BD%E4%BB%A4"><span class="nav-number">9.</span> <span class="nav-text">复杂宏命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E7%BC%96%E8%AF%91%E4%BB%A3%E7%A0%81%E5%9D%97%EF%BC%88Conditional-Compilation-Blocks"><span class="nav-number">10.</span> <span class="nav-text">条件编译代码块（Conditional Compilation Blocks)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">11.</span> <span class="nav-text">最后</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2017/07/14/Interactive-with-C-APIs-Swift-4-beta/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【译】Swift与 C API的交互（Swift 4 beta）
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-07-14 20:54:30" itemprop="dateCreated datePublished" datetime="2017-07-14T20:54:30+08:00">2017-07-14</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2018-12-18 22:23:15" itemprop="dateModified" datetime="2018-12-18T22:23:15+08:00">2018-12-18</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Swift/" itemprop="url" rel="index"><span itemprop="name">Swift</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作为与 Objective-C 交互的一部分，Swift 对 C 语言的类型和特性也提供了良好的兼容。Swift还提供了相应的交互方式，以便在需要时可以在代码中使用常见的 C 结构模式。</p>
+<a id="more"></a>
+
+<h3 id="基本类型"><a href="#基本类型" class="headerlink" title="基本类型"></a>基本类型</h3><p>虽然 Swift 提供了与 C 语言中 char，int，float 和 double 等基本类型等价的类型。但这些类型，如 Int，不能与 Swift 核心类型进行隐式转换。因此除非代码中有明确要求（使用等价的 C 类型），否则都应使用 Int（等 Swift 核心类型）。</p>
+<table>
+<thead>
+<tr>
+<th align="left">C</th>
+<th align="left">Swift</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">bool</td>
+<td align="left">CBool</td>
+</tr>
+<tr>
+<td align="left">char, signed char</td>
+<td align="left">CChar</td>
+</tr>
+<tr>
+<td align="left">unsigned char</td>
+<td align="left">CUnsignedChar</td>
+</tr>
+<tr>
+<td align="left">short</td>
+<td align="left">CShort</td>
+</tr>
+<tr>
+<td align="left">unsigned short</td>
+<td align="left">CUnsignedShort</td>
+</tr>
+<tr>
+<td align="left">int</td>
+<td align="left">CInt</td>
+</tr>
+<tr>
+<td align="left">unsigned int</td>
+<td align="left">CUnsignedInt</td>
+</tr>
+<tr>
+<td align="left">long</td>
+<td align="left">CLong</td>
+</tr>
+<tr>
+<td align="left">unsigned long</td>
+<td align="left">CUnsignedLong</td>
+</tr>
+<tr>
+<td align="left">long long</td>
+<td align="left">CLongLong</td>
+</tr>
+<tr>
+<td align="left">unsigned long long</td>
+<td align="left">UnsignedLongLong</td>
+</tr>
+<tr>
+<td align="left">wchar_t</td>
+<td align="left">CWideChar</td>
+</tr>
+<tr>
+<td align="left">char16_t</td>
+<td align="left">CChart16</td>
+</tr>
+<tr>
+<td align="left">char32_t</td>
+<td align="left">CChart32</td>
+</tr>
+<tr>
+<td align="left">float</td>
+<td align="left">CFloat</td>
+</tr>
+<tr>
+<td align="left">double</td>
+<td align="left">CDouble</td>
+</tr>
+</tbody></table>
+<h3 id="全局常量"><a href="#全局常量" class="headerlink" title="全局常量"></a>全局常量</h3><p>定义在 C 和 Objective-C 源文件中的全局常量，会自动被 Swift 编译器引入为全局常量。</p>
+<h4 id="导入的枚举和结构体"><a href="#导入的枚举和结构体" class="headerlink" title="导入的枚举和结构体"></a>导入的枚举和结构体</h4><p>在 Objective-C 中，常量通常用来为属性和函数参数提供一组可选值。Ojbective-C 中那些被 NS_STRING_ENUM 或 NS_EXTENSIBLE_STRING_ENUM 宏标注的 typedef 声明，会被 Swift 以普通类型的成员的方式导入。通过 NS_STRING_ENUM 声明的枚举不可以在添加额外的值进行扩展，而通过 NS_EXTENSIBLE_STRING_ENUM 声明的枚举，则可以在 Swift 的扩展（extension）中进行扩展。</p>
+<p>通过 NS_STRING_ENUM 宏声明的一组常量，会被导入为结构体。例如，下面这段在 Objective-C 中 被声明为字符串常量的 TraficLightColor 类型：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef NSString * TrafficLightColor NS_STRING_ENUM;</span><br><span class="line">TrafficLightColor const TraficLightColorRed;</span><br><span class="line">TrafficLightColor const TraficLightColorYellow;</span><br><span class="line">TrafficLightColor const TraficLightColorGreen;</span><br></pre></td></tr></table></figure>
+
+<p>下面是 Swift 导入后结果: </p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">TrafficLightColor</span>: <span class="title">RawRepresentable</span> </span>&#123;<span class="comment">//注意区别，Swift 3 中是导入为枚举的</span></span><br><span class="line">	<span class="keyword">typealias</span> <span class="type">RawValue</span> = <span class="type">String</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">init</span>(rawValue: <span class="type">RawValue</span>)</span><br><span class="line">	<span class="keyword">var</span> rawValue: <span class="type">RawValue</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> red: <span class="type">TrafficLightColor</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> yellow: <span class="type">TrafficLightColor</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line"> 	<span class="keyword">static</span> <span class="keyword">var</span> green: <span class="type">TrafficLIghtColor</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过 NS_EXTENSIBLE_STRING_ENUM 宏声明的一组可扩展的常量值，同样会被导入为结构体。例如，下面这段在 Objective-C 中被声明为字符串常量的 StateOfMatter 类型：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef NSString * StateOfMatter NS_EXTENSIBLE_STRING_ENUM;</span><br><span class="line">StateOfMatter const StateOfMatterSolid;</span><br><span class="line">StateOfMatter const StateOfMatterLiquid;</span><br><span class="line">StateOfMatter const StateOfMatterGas;</span><br></pre></td></tr></table></figure>
+
+<p>下面是 Swift 导入后结果:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">StateOfMatter</span>: <span class="title">RawRepresentable</span> </span>&#123;</span><br><span class="line">	<span class="keyword">typealias</span> <span class="type">RawValue</span> = <span class="type">String</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">init</span>(<span class="keyword">_</span> rawValue: <span class="type">RawValue</span>) <span class="comment">//注意该构造器在 Swift 3中是没有的。</span></span><br><span class="line">	<span class="keyword">init</span>(rawValue: <span class="type">RawValue</span>)</span><br><span class="line">	<span class="keyword">var</span> rawValue: <span class="type">RawValue</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> solid: <span class="type">StateOfMatter</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> liquid: <span class="type">StateOfMatter</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> gas: <span class="type">StateOfMatter</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以可扩展形式声明的常量，在被导入后，会额外添加一个可忽略参数标签的构造器，以便扩展添加新值。</p>
+<p>通过 NS_EXTENSIBLE_STRING_ENUM 宏声明的常量，导入后，可在 Swift 代码中扩展添加新值。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">StateOfMatter</span> </span>&#123;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> plasma: <span class="type">StateOfMatter</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="type">StateOfMatter</span>(rawValue: <span class="string">&quot;plasma&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>###函数</p>
+<p>Swift可以把任何声明在 C 头文件中的函数作为全局函数导入。例如，下面的 C 函数声明：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">product</span><span class="params">(<span class="keyword">int</span> multiplier, <span class="keyword">int</span> multiplicand)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">quotient</span><span class="params">(<span class="keyword">int</span> dividend, <span class="keyword">int</span> devisor, <span class="keyword">int</span> *remainder)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">struct Point2D <span class="title">createPoint2D</span><span class="params">(<span class="keyword">float</span> x, <span class="keyword">float</span> y)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">distance</span><span class="params">(struct Point2D from, struct Point2D to)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>下面是 Swift 导入后结果:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">product</span><span class="params">(<span class="keyword">_</span> multiplier: Int32, <span class="keyword">_</span> multiplicand: Int32)</span></span> -&gt; <span class="type">Int32</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">quotient</span><span class="params">(<span class="keyword">_</span> dividen: Int32, <span class="keyword">_</span> devison: Int32, UnsafeMutablePointer&lt;Int32&gt;!)</span></span> -&gt; <span class="type">Int32</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">createPoint2D</span><span class="params">(<span class="keyword">_</span> x: Float, <span class="keyword">_</span> y: Float)</span></span> -&gt; <span class="type">Point2D</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">distance</span><span class="params">(<span class="keyword">_</span> from: Point2D, <span class="keyword">_</span> to: Point2D)</span></span> -&gt; <span class="type">Float</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="变参函数-Variadic-Functions"><a href="#变参函数-Variadic-Functions" class="headerlink" title="变参函数(Variadic Functions)"></a>变参函数(Variadic Functions)</h4><p>在 Swift 中，可以通过 <code>getValist(\_:)</code> 或者 <code>withValist(\_:\_:)</code> 来调用 C 中诸如 vaspritf 这样的变参函数。 <code>getValist(\_:)</code> 函数接收一个包含 CVarArg 值的数组，并返回一个 CVaListPointer，与直接返回不同的是 <code>withValist(\_:\_:)</code> 通过接受一个闭包来实现。其结果 CVaListPointer 最后会作为 va_lsit 参数传递给 C 变参函数。</p>
+<p>例如，下面的代码展示了如何在 Swift 中调用 vasprintf 函数：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Swiftprintf</span><span class="params">(format: String, argument: CVarArg...)</span></span> -&gt; <span class="type">String?</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> withValist(arguments) &#123; va_list <span class="keyword">in</span></span><br><span class="line">		<span class="keyword">var</span> buffer: <span class="type">UnsafeMutablePointer</span>&lt;<span class="type">Int8</span>&gt;? = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span> format.withCstring &#123; <span class="type">CString</span> <span class="keyword">in</span> </span><br><span class="line">			<span class="keyword">guard</span> vasprintf(&amp;buffer, <span class="type">CString</span>, va_list) != <span class="number">0</span> <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">			<span class="keyword">return</span> <span class="type">String</span>(validatingUTF8: buffer!)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="type">Swiftprintf</span>(format: <span class="string">&quot;√2 ≅ %g&quot;</span>, arguments: sqrt(<span class="number">2.0</span>))!)</span><br><span class="line"><span class="comment">// Prints &quot;√2 ≅ 1.41421&quot;</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>注意
+可选类型指针不能传入 `withVaList(_:invoke:)` 函数，
+可以通过 `Int.init(bitPattern:)` 构造函数，来将可选类型指针转为 Int，
+在所有支持的平台上该指针的调用规则与 C 相同。</code></pre>
+<h3 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h3><p>Swift 可以把任何头文件中声明的 C 结构体引入为 Swift 结构体，引入后的结构体会为每一个原 C 结构体成员生成一个存储型属性和一个逐一成员构造器。如果被引入的成员均有默认值，那么 Swift 同时会生成一个无参数的默认构造器。例如下面这个 C 结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Color</span> &#123;</span></span><br><span class="line">	<span class="keyword">float</span> r, g, b;</span><br><span class="line">&#125;:</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">Color</span> <span class="title">Color</span>;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面是与之相应的 Swift 结构体：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">struct</span> <span class="title">Color</span> </span>&#123;</span><br><span class="line">	<span class="keyword">var</span> r: <span class="type">Float</span></span><br><span class="line">	<span class="keyword">var</span> g: <span class="type">Float</span></span><br><span class="line">	<span class="keyword">var</span> b: <span class="type">Float</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">init</span>()</span><br><span class="line">	<span class="keyword">init</span>(r: <span class="type">Float</span>, g: <span class="type">Float</span>, b: <span class="type">Float</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="将函数引入为类型成员"><a href="#将函数引入为类型成员" class="headerlink" title="将函数引入为类型成员"></a>将函数引入为类型成员</h4><p>CoreFoundation 框架中的 C API，大都提供了用于创建、存取、以及修改 C 结构体的函数。可以通过在代码添加CF_SWIFT_NAME 宏标记，来让 Swift 将这些 C 函数引入为结构体的成员函数。例如，下面这段C函数声明：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Color <span class="title">ColorCreateWithCMYK</span><span class="params">(<span class="keyword">float</span> c, <span class="keyword">float</span> m, <span class="keyword">float</span> y, <span class="keyword">float</span> k)</span> <span class="title">CF_SWFIT_NAME</span><span class="params">(Color.init(c:m:y:k:))</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">ColorGetHue</span><span class="params">(Color color)</span> <span class="title">CF_SWIFT_NAME</span><span class="params">(getter:Color.hue(self:))</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ColorSetHue</span><span class="params">(Color color, <span class="keyword">float</span> hue)</span> <span class="title">CF_SWIFT_NAME</span><span class="params">(setter:Color.hue(self:newvalue))</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">Color <span class="title">ColorDarkenColor</span><span class="params">(Color color, flaot amout)</span> <span class="title">CF_SWIFT_NAME</span><span class="params">(Color.Darken(self:amount:))</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">const</span> Color ColorBondiBlue <span class="title">CF_SWIFT_NAME</span><span class="params">(Color.boundiBlue)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">Color <span class="title">ColorGetCalibrationColor</span><span class="params">(<span class="keyword">void</span>)</span> <span class="title">CF_SWIFT_NAME</span><span class="params">(getter:Color.calibration())</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">Color <span class="title">ColorSetCalibrationColor</span><span class="params">(Color color)</span> <span class="title">CF_SWIFT_NAME</span><span class="params">(setter:Color.calibration(newValue:))</span></span>;</span><br></pre></td></tr></table></figure>
+<p>下面展示了 Swift 如何将它们以类型成员的方式导入：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">color</span> </span>&#123;</span><br><span class="line">	<span class="keyword">init</span>(<span class="built_in">c</span>: <span class="type">Float</span>, m: <span class="type">Float</span>, y: <span class="type">Float</span>, k: <span class="type">Float</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> hue: <span class="type">Float</span> &#123; <span class="keyword">get</span> <span class="keyword">set</span> &#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">func</span> <span class="title">darken</span><span class="params">(amount: Float)</span></span> -&gt; <span class="type">Color</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> bondiBlue: <span class="type">Color</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">var</span> calibration: <span class="type">Color</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>传入 CF_SWIFT_NAME 宏的参数语法与 <code>#selector</code> 表达式相同。CF_SWIFT_NAME 宏中的 self，表示接收该方法的实例对象。</p>
+<pre><code>注意
+使用 CF_SWIFT_NAME 宏时不能改变被引入成员函数的参数顺序和数量。
+如果想更Swift点，可以重写一个Swift函数，然后在其内部再调用所需的 C 函数
+（译者：用Swift再做一层封装）</code></pre>
+<h3 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h3><p>Swift 可以把任何使用 NS_ENUM 宏标记的 C 枚举引入为 Int 类型的 Swift 枚举。无论是系统框架还是其它代码，引入后的枚举都会自动移除原命名前缀，<br>例如，下面这个通过 NS_ENUM 宏声明的 C 枚举:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NS_ENUM</span><span class="params">(NSInteger, UITableViewCellStyle)</span></span>&#123;</span><br><span class="line">	UITableViewCellStyleDefault, </span><br><span class="line">	UITableViewCellStyleValue1, </span><br><span class="line">	UITableViewCellStyleValue2, </span><br><span class="line">	UITableViewCellStyleSubtitle</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 Swift 导入后，会呈现为以下形式：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">UITableViewCellStyle</span>: <span class="title">Int</span> </span>&#123;</span><br><span class="line">	<span class="keyword">case</span> &#x27;<span class="keyword">default</span>&#x27;</span><br><span class="line">	<span class="keyword">case</span> value1</span><br><span class="line">	<span class="keyword">case</span> value2</span><br><span class="line">	<span class="keyword">case</span> subtitle</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过点语法（译者注：.valueName）来引用一个枚举值。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> cellStyle: <span class="type">UITableViewCellStyle</span> = .<span class="keyword">default</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>注意：
+Swift 引入的 C 枚举，在构造时即使入参与声明不一致，也不会导致构造失败。
+这么处理是为了与 C 兼容，因为 C 枚举允许任意类型的值，即使这个值没有暴露在头文件中，
+而仅仅是供内部使用。</code></pre>
+<p>那些使用 NS_ENUM 或 NS_OPTIONS 宏声明的 C 枚举会被导入为 Swift 结构体。C 枚举中的每个成员都会被导入为一个与结构体类型相同的只读的全局计算型属性，而非结构体成员属性。</p>
+<p>例如，下面这个未使用 NS_ENUM 宏声明的 C 结构体</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">enum</span> &#123;</span></span><br><span class="line">	MessageDispositionUnread = <span class="number">0</span>,</span><br><span class="line">	MessageDispositionRead = <span class="number">1</span>,</span><br><span class="line">	MessageDispositionDeleted = <span class="number">-1</span></span><br><span class="line">&#125; MessageDisposition;</span><br></pre></td></tr></table></figure>
+
+<p>在 Swift 中，它会被导入为以下形式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct MessageDisposition: RawRePresentable, Equatable&#123;&#125;</span><br><span class="line"></span><br><span class="line">var MessageDispositionUnread: MessageDisposition &#123; get &#125;</span><br><span class="line">var MessageDispositionRead: MessageDisposition &#123; get &#125;</span><br><span class="line">var MessageDispositionDeleted: MessageDisposition &#123; get &#125;</span><br></pre></td></tr></table></figure>
+<p>Swift 会自动为导入的 C 枚举类型适配 Equaltable 协议。</p>
+<h4 id="选项型枚举（Option-sets）"><a href="#选项型枚举（Option-sets）" class="headerlink" title="选项型枚举（Option sets）"></a>选项型枚举（Option sets）</h4><p>Swift 同样可以把 NS_OPTIONS 宏标注的 C 选项型枚举导入为 Swift 的选项（Option set）。与先前枚举的引入类似，选项的命名前缀也会被移除。<br>例如，下面这个在 Objective-C 声明的选项：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef NS_OPTIONS(NSUInteger, UIViewAutoresizing)&#123;</span><br><span class="line">	UIViewAutoresizingNone &#x3D; 0,</span><br><span class="line">	UIViewAutoresizingFlexibleLeftMargin &#x3D; 1 &lt;&lt; 0,</span><br><span class="line">	UIViewAutoresizingFlexibleWidth &#x3D; 1 &lt;&lt; 1, </span><br><span class="line">	UIViewAutoresizingFlexibleRightMargin &#x3D; 1 &lt;&lt; 2,</span><br><span class="line">	UIViewAutoresizingFlexibleTopMargin &#x3D; 1 &lt;&lt; 3,</span><br><span class="line">	UIViewAutoresizingFlexibleHeight &#x3D; 1 &lt;&lt; 4,</span><br><span class="line">	UIViewAutoresizingFlexibleBottomMargin &#x3D; 1 &lt;&lt; 5</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在 Swift 中会被导入为以下形式：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">struct</span> <span class="title">UIViewAutoresizing</span> : <span class="title">OptionSet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">init</span>(rawValue: <span class="type">UInt</span>)</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleLeftMargin: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleWidth: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleRightMargin: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleTopMargin: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleHeight: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">var</span> flexibleBottomMargin: <span class="type">UIViewAutoresizing</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 Objective-C 中，选项型枚举实际上是整型位掩码。既可以通过位或运算符（｜）来组合选项值，又可以通过位与运算符（&amp;)检查选项值。我们还可以通过常量或表达式来创建选项，空选项用常量零（0）表示。</p>
+<p>在 Swift 中，选项是以一个遵从 OptionSet 协议的结构体来实现的，每个选项都是该结构体的一个静态变量。与枚举类似，我们既可以通过字面量数组来创建一个选项，又可以通过点（.）语法获取选项的一个值。一个空的选项既可以通过字面量空数组（［］）创建，也可以通过调用其默认构造函数创建。</p>
+<pre><code>注意
+当引入 NS_OPTIONS 宏标记的 C 枚举时，任何值为 0 的选项成员都会被 Swift 标记为无效，
+因为 Swift 中使用空选项来表示没有选项。</code></pre>
+<p>选项与 Swift 中的 Set 集合类型相似，可以通过 <code>insert(\_:)</code> 或 <code>formUnion(\_:)</code> 函数添加选项值，也可以通过 <code>remove(\_:)</code> 或 <code>substract(\_:)</code> 函数删除一个选项值，还可以通过 <code>contains(\_:)</code> 来查验选项值。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> options: <span class="type">Data</span>.<span class="type">Base64EncodingOptions</span> = [</span><br><span class="line">	.lineLength64Characters,</span><br><span class="line">	.endLineWithLineFeed</span><br><span class="line">]</span><br><span class="line">	</span><br><span class="line"><span class="keyword">let</span> string = data.base64EncodedString(options:options)</span><br></pre></td></tr></table></figure>
+
+<h4 id="联合体（Unions）（译者注：该部分为新增加内容个，Swift-3-是不支持的）"><a href="#联合体（Unions）（译者注：该部分为新增加内容个，Swift-3-是不支持的）" class="headerlink" title="联合体（Unions）（译者注：该部分为新增加内容个，Swift 3 是不支持的）"></a>联合体（Unions）（译者注：该部分为新增加内容个，Swift 3 是不支持的）</h4><p>Swift 会把 C 联合体导入为 Swift 的结构体。虽然 Swift 不支持联合体，但是被导入后其使用仍与 C 联合体非常相似。例如，下面这个拥有 isAlive 和 isDead 两个域的联合体 SchroedingersCat:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">union</span> <span class="title">SchroedingersCat</span> &#123;</span></span><br><span class="line">	<span class="keyword">bool</span> isAlive;</span><br><span class="line">	<span class="keyword">bool</span> isDead;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 Swift 中会将其导入为一下形式：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">sturct <span class="type">SchroedingsCat</span> &#123;</span><br><span class="line">	<span class="keyword">var</span> isAlive: <span class="type">Bool</span> &#123; <span class="keyword">get</span> <span class="keyword">set</span> &#125;</span><br><span class="line">	<span class="keyword">var</span> isDead: <span class="type">Bool</span> &#123; <span class="keyword">get</span> <span class="keyword">set</span> &#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">init</span>(isAlive: <span class="type">Bool</span>)</span><br><span class="line">	<span class="keyword">init</span>(isDead: <span class="type">Bool</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">init</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于 C 中的联合体所有域共享一段内存，所以被 Swift 导入后生成的所有计算型属性也具有相同的内存结构。因此，当改变任何一个该结构体实例的计算型属性时，那么该实例的其它属性也会发生相应改变。</p>
+<p>例如下面这个例子，当改变 SchroedingersCat 实例上的 isAlive 计算型属性时，其另一个计算型属性 isDead 也发生来相应的变化：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> mittens = <span class="type">SchroedingersCat</span>(isAlive: fasle)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(mittens.isAlive, mittens.isDead)</span><br><span class="line"><span class="comment">// Prints &quot;fasle false&quot;</span></span><br><span class="line"></span><br><span class="line">mittens.isAlive = <span class="literal">true</span></span><br><span class="line"><span class="built_in">print</span>(mittens.isDead)</span><br><span class="line"><span class="comment">// Prints &quot;true&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="位域（Bit-Fields）"><a href="#位域（Bit-Fields）" class="headerlink" title="位域（Bit Fields）"></a>位域（Bit Fields）</h4><p>Swift 可以把结构体中的位域，例如 Foundation 中的 NSDecimal 类型，导入为计算型属性。在对其进行访问时，Swift 会自动将其值转换为与 Swift 相兼容的类型。</p>
+<h4 id="匿名的结构体和联合体域（Union-Fields）"><a href="#匿名的结构体和联合体域（Union-Fields）" class="headerlink" title="匿名的结构体和联合体域（Union Fields）"></a>匿名的结构体和联合体域（Union Fields）</h4><p>(译者注：这里变化很大，且受限译者理解水平，翻译的可能不够准确)</p>
+<p>C 中的 Struct 和 union 类型可定义成匿名或者匿名类型，匿名域由具名的相邻结构题或联合体类型组成。</p>
+<p>例如，这个名为 Cake 的 C 结构体，它包含一个拥有 layers 和 height 两个相邻域的匿名联合体，以及一个域为 toppings的匿名结构题类型：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Cake</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">		<span class="keyword">int</span> layers;</span><br><span class="line">		<span class="keyword">double</span> height;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">		<span class="keyword">bool</span> icing;</span><br><span class="line">		<span class="keyword">bool</span> sprinkles;</span><br><span class="line">	&#125; toppings;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 Cake 被导入后，可以这样初始化并调用它：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> simpleCake = <span class="type">Cake</span>()</span><br><span class="line">simpleCake.layers = <span class="number">5</span></span><br><span class="line"><span class="built_in">print</span>(simpleCake.toppings.icing)</span><br><span class="line"><span class="comment">//	Prints &quot;false&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Cake 在被导入后，会生成一个逐一成员构造器，可为其域传自定义值来构造该结构体，例如：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> cake = <span class="type">Cake</span>( .<span class="keyword">init</span>(layers: <span class="number">2</span>), toppings: .<span class="keyword">init</span>(icing: <span class="literal">true</span>, sprinkles: <span class="literal">false</span>))</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;The cake has \(cake.layers) layers&quot;</span>)</span><br><span class="line"><span class="comment">// Prints &quot;The cake has 2 layers.&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Does it have sprinkes?&quot;</span>, cake.toppings.sprinkles ? <span class="string">&quot;Yes.&quot;</span> : <span class="string">&quot;No.&quot;</span>)</span><br><span class="line"><span class="comment">// Prints &quot;Does it have sprinkles? No.&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>由于 Cake 结构体的第一个域是匿名的，所以它的构造器的第一个参数也没有标签。由于 Cake 结构体的域含有匿名类型，所以使用 .init 构造器，通过类型推断的方式来为结构体的每个匿名域设置初始值。</p>
+<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>Swift 一直在尽力避免直接访问指针。但仍提供了丰富的指针类型以备不时之需。下表使用 Type 来指代不同语言的相应类型。</p>
+<p>变量、参数、返回值的指针对照关系如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">C Syntax</th>
+<th align="left">Swift Syntax</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">const Type *</td>
+<td align="left">UnsafePointer&lt;Type&gt;</td>
+</tr>
+<tr>
+<td align="left">Type *</td>
+<td align="left">UnsafeMutablePointer&lt;Type&gt;</td>
+</tr>
+</tbody></table>
+<p>类类型指针对照关系如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">C Syntax</th>
+<th align="left">Swift Syntax</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Type * const *</td>
+<td align="left">UnsafePointer&lt;Type&gt;</td>
+</tr>
+<tr>
+<td align="left">Type * __strong *</td>
+<td align="left">UnsafeMutablePointer&lt;Type&gt;</td>
+</tr>
+<tr>
+<td align="left">Type **</td>
+<td align="left">AutoreleasingUnsafeMutablePointer&lt;Type&gt;</td>
+</tr>
+</tbody></table>
+<p>无类型指针与原始内存（指针）的对照关系表：(译者注：swift 3中是不存在的)</p>
+<table>
+<thead>
+<tr>
+<th align="left">C Syntax</th>
+<th align="left">Swift Syntax</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">const void *</td>
+<td align="left">UnsafeRawPointer&lt;Type&gt;</td>
+</tr>
+<tr>
+<td align="left">void *</td>
+<td align="left">UnsafeMutableRawPointer&lt;Type&gt;</td>
+</tr>
+</tbody></table>
+<p>Swift 还提供来用于操作缓存的指针类型，请参见 缓存指针(Buffer Pointers)。</p>
+<p>如果 Swift 中没有与 C 指针所指内容相应的类型，例如，一个不完全的结构体（incomplete struct）类型，那么这个指针会被导入为 OpaquePointer。</p>
+<h4 id="常量指针"><a href="#常量指针" class="headerlink" title="常量指针"></a>常量指针</h4><p>一个接受 UnsafePointer&lt;Type&gt; 类型参数的函数，同样可以接受下列类型参数：</p>
+<ul>
+<li>一个 UnsafePointer&lt;Type&gt;，UnsafeMutalbePointer&lt;Type&gt;，或 AutoreleasingUnsafeMutablePointer&lt;Type&gt; 类型的值，如有必要它会被转换为 UnsafePointer&lt;Type&gt; 类型。</li>
+<li>如果 Type 是 <code>Int8</code> 或 <code>UInt8</code> ，则可接受一个 String 类型的值。该字符串会自动被转换为一个 UTF8 字符缓存（buffer），然后将指向该缓存（buffer）的指针传入该函数。</li>
+<li>一个包含一个或多个变量、属性、Type 类型下标引用的 in-out 表达式。表达式会以指向左起首位参数内存地址的指针形式被传入。</li>
+<li>［Type］（一个含有Type类型元素的数组）,会以指向数组首地址的指针形式传入。</li>
+</ul>
+<p>传入函数的指针，仅保证在函数调用期间有效。不要尝试持有或在函数返回后访问该指针。</p>
+<p>例如，这样一个函数：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takesAPointer</span><span class="params">(<span class="keyword">_</span> p: UnsafePointer&lt;Float&gt;)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以这样调用它：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x: <span class="type">Float</span> = <span class="number">0.0</span></span><br><span class="line">takesAPointer(&amp;x)</span><br><span class="line">takesAPointer([<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>])</span><br></pre></td></tr></table></figure>
+
+<p>一个接受 UnsafePointer&lt;Void&gt; 类型参数的函数，同样可以接受相同操作数的任意 Type 类型的 UnsafePointer&lt;Type&gt; 指针。</p>
+<p>例如下面这个函数：（译者注：注意无类型指针的变动，由Void变成了Raw）</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takesARawPointer</span><span class="params">(<span class="keyword">_</span> p: UnsafeRawPointer?)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>它可以这样被调用：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x: <span class="type">Float</span> = <span class="number">0.0</span>, y: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line">takesARawPointer(&amp;x)</span><br><span class="line">takesARawPointer(&amp;y)</span><br><span class="line">takesARawPointer([<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>] <span class="keyword">as</span> [<span class="type">Float</span>])</span><br><span class="line"><span class="keyword">let</span> intArray = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">takesARawPointer(intArray)</span><br></pre></td></tr></table></figure>
+
+<h4 id="可变指针（Mutable-Pointers）"><a href="#可变指针（Mutable-Pointers）" class="headerlink" title="可变指针（Mutable Pointers）"></a>可变指针（Mutable Pointers）</h4><p>一个接受 UnsafeMutablePointer&lt;Type&gt;类型参数的函数，同样可以接受下列类型参数：</p>
+<ul>
+<li>一个 UnsafeMutablePointer&lt;Type&gt; 类型的值</li>
+<li>一个含有一个或多个变量、属性、Type类型下标引用的 in-out 表达式，以指向多个值地址的指针的形式被传入。</li>
+<li>一个包含多个变量、属性、或下标引用的［Type］类型的 in-out表达式，会以指向该数组起始地址的指针形式传入，与此同时其生命周期会被延长，持续于整个函数调用期间。</li>
+</ul>
+<p>例如下面这个函数：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takesAMutablePointer</span><span class="params">(<span class="keyword">_</span> p: UnsafeMutablePointer&lt;Float&gt;)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它可以这样被调用：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x: <span class="type">Float</span> = <span class="number">0.0</span></span><br><span class="line"><span class="keyword">var</span> a: [<span class="type">Float</span>] = [<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>]</span><br><span class="line">takesAMutablePointer(&amp;x)</span><br><span class="line">takesAMutablePointer(&amp;a)</span><br><span class="line">```	</span><br><span class="line"></span><br><span class="line">一个接受 <span class="type">UnsafeMutableRawPointer</span>\&lt;<span class="type">Void</span>\&gt; 类型参数的函数，同样可以接受相同操作数的任意 <span class="type">Type</span> 类型 的 <span class="type">UnsafeMutablePointer</span>\&lt;<span class="type">Type</span>\&gt; 指针。</span><br><span class="line"></span><br><span class="line">例如下面这个函数：</span><br><span class="line"></span><br><span class="line">``` <span class="type">Swift</span></span><br><span class="line"><span class="comment">//译者注：注意无类型指针的变化。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takesAMutableRawPointer</span><span class="params">(<span class="keyword">_</span> p: UnsafeMutableRawPointer?)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它可以这样被调用：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x: <span class="type">Float</span> = <span class="number">0.0</span>, y: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line"><span class="keyword">var</span> a: [<span class="type">Float</span>] = [<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>], b: [<span class="type">Int</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">takesAMutableRawPointer(&amp;x)</span><br><span class="line">takesAMutableRawPointer(&amp;y)</span><br><span class="line">takesAMutableRawPointer(&amp;a)</span><br><span class="line">takesAMutableRawPointer(&amp;b)</span><br><span class="line">```	</span><br><span class="line"></span><br><span class="line">#### 自释放指针（autoreleasing <span class="type">Pointers</span>）</span><br><span class="line"></span><br><span class="line">一个接受 <span class="type">AutoreleasingUnsafeMutablePointer</span>\&lt;<span class="type">Type</span>\&gt; 类型参数的函数，同样可以接受下列类型参数：</span><br><span class="line"></span><br><span class="line">- 一个 <span class="type">AutoreleasingUnsafeMutablePointer</span>\&lt;<span class="type">Type</span>\&gt; 类型的值</span><br><span class="line">- 一个含有一个或多个变量、属性、<span class="type">Type</span>类型下标引用的 <span class="keyword">in</span>-out 表达式，它会被按位拷贝到一个非持有的临时缓存，随之指向该缓存的指针会被传入，并且在返回时，缓存中的值会被加载，持有，并赋值到操作数中。</span><br><span class="line"></span><br><span class="line">注意：上表<span class="keyword">_</span>不包含数组<span class="keyword">_</span>。</span><br><span class="line"></span><br><span class="line">例如下面这个函数：</span><br><span class="line"></span><br><span class="line">``` <span class="type">Swift</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">takesAnAutoreleasingPointer</span><span class="params">(<span class="keyword">_</span> p: AutoreleasingUnsafeMutablePointer&lt;NSDate?&gt;)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它可以这样被调用：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x: <span class="type">NSDate?</span> = <span class="literal">nil</span></span><br><span class="line"><span class="type">AutoreleasingUnsafeMutablePointer</span>(&amp;x)</span><br><span class="line">```	</span><br><span class="line"></span><br><span class="line">指针所指的类型不会被转换（bridged）。例如，<span class="type">NSString</span> \*\* 会被 <span class="type">Swift</span> 导入为 <span class="type">AutoreleasingUnsafeMutablePointer</span>\&lt;<span class="type">NSString?</span>\&gt;，而不是 <span class="type">AutoreleasingUnsafeMutablePointer</span>\&lt;<span class="type">String?</span>\&gt;。</span><br><span class="line"></span><br><span class="line">#### 函数指针</span><br><span class="line"></span><br><span class="line">通过 <span class="meta">@convention</span>(<span class="built_in">c</span>) 标注，<span class="type">Swift</span> 会根据 <span class="type">C</span> 函数指针调用规则将其引入为闭包。例如，一个 `int (x) (void)`类型的 <span class="type">C</span> 函数指针，在 <span class="type">Swift</span> 中会被导入为 `@convertion(<span class="built_in">c</span>) () -&gt; <span class="type">Int32</span>` 。当调用一个接受函数指针类型参数的函数时，可以直接传入一个顶级的 <span class="type">Swift</span> 函数，一个 closure literal，或者 <span class="literal">nil</span>。还可以传入一个泛型闭包属性，或者一个闭包参数列表和者闭包体中都没有引用泛型参数的泛型函数。例如，<span class="type">Core</span> <span class="type">Foundation</span> 中的 `<span class="type">CFArrayCreateMutable</span>(<span class="keyword">_</span>:<span class="keyword">_</span>:<span class="keyword">_</span>:)` 函数。`<span class="type">CFArrayCreateMutable</span>(<span class="keyword">_</span>:<span class="keyword">_</span>:<span class="keyword">_</span>:)` 函数，接受一个初始化为函数指针的 <span class="type">CFArrayCallBacks</span> 结构体：</span><br><span class="line"></span><br><span class="line">``` <span class="type">Swift</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">customCopyDescription</span><span class="params">(<span class="keyword">_</span> p: UnsafeRawPointer?)</span></span> -&gt; <span class="type">Unmanaged</span>&lt;<span class="type">CFString</span>&gt;? &#123;</span><br><span class="line">	<span class="comment">// return an Unmanaged&lt;CFString&gt;? value</span></span><br><span class="line">&#125;</span><br><span class="line">	</span><br><span class="line"><span class="keyword">var</span> callBacks = <span class="type">CFArrayCallBacks</span>(</span><br><span class="line">	version: <span class="number">0</span>,</span><br><span class="line">	retain: <span class="literal">nil</span>,</span><br><span class="line">	release: <span class="literal">nil</span>,</span><br><span class="line">	copyDescription: customCopyDescription,</span><br><span class="line">	<span class="built_in">equal</span>: &#123; (p1, p2) -&gt; <span class="type">DarwinBoolean</span> <span class="keyword">in</span> </span><br><span class="line">		<span class="comment">// return Bool value</span></span><br><span class="line">	&#125;</span><br><span class="line">)</span><br><span class="line"> 	</span><br><span class="line"><span class="keyword">var</span> mutableArray = <span class="type">CFArrayCreateMutable</span>(<span class="literal">nil</span>, <span class="number">0</span>, &amp;callbacks)</span><br><span class="line">```	</span><br><span class="line"></span><br><span class="line">上面的例子中，<span class="type">CFArrayCallBacks</span>的构造函数，把 <span class="literal">nil</span> 分别赋值给 retain 和 release 参数，把 `customCopyDescription(<span class="keyword">_</span>:)` 函数作为参数赋给 copyDescription，并把一个闭包体作为参数赋值 <span class="built_in">equal</span>。</span><br><span class="line"></span><br><span class="line">	注意：</span><br><span class="line">	<span class="type">Only</span> <span class="type">Swift</span> function types with <span class="type">C</span> function reference calling convention may be used <span class="keyword">for</span> function pointer arguments. <span class="type">Like</span> a <span class="type">C</span> function pointer, a <span class="type">Swift</span> function type with the @convertions(<span class="built_in">c</span>) attribute does not capture the context of its surrounding scope.</span><br><span class="line"></span><br><span class="line">	欲了解跟多详情，请访问 _The <span class="type">Swift</span> <span class="type">Programming</span> <span class="type">Language</span> (<span class="type">Swift</span> <span class="number">4</span>) 中有关 <span class="type">Type</span> <span class="type">Attributes</span> 一节。</span><br><span class="line"></span><br><span class="line">#### 缓存指针（<span class="type">Buffer</span> <span class="type">Pointers</span>）</span><br><span class="line"></span><br><span class="line">缓存指针通常用于访问一个低级的内存区域。例如，使用缓存指针来高效地处理应用与服务器之间的数据交换。</span><br><span class="line"></span><br><span class="line"><span class="type">Swift</span> 有一下几种缓存指针类型：</span><br><span class="line"></span><br><span class="line">- <span class="type">UnsafeBufferPointer</span></span><br><span class="line">- <span class="type">UnsafeMutableBufferPointer</span></span><br><span class="line">- <span class="type">UnsafeRawBufferPointer</span></span><br><span class="line">- <span class="type">UnsafeMutableRawBufferPointer</span></span><br><span class="line"></span><br><span class="line">类型明确的缓存指针，<span class="type">UnsafeBufferPointer</span> 和 <span class="type">UnsafeMutableBufferPointer</span> 允许你查看或者改变一个相邻的内存块儿。该类型允许你把内存作为一个集合来访问，<span class="keyword">where</span> each item <span class="keyword">is</span> an instance of the buffer type&#x27;s <span class="type">Element</span> generic type parameter.</span><br><span class="line"></span><br><span class="line">原始缓存指针类型，<span class="type">UnsafeRawBufferPointer</span> 和 <span class="type">UnsafeMutableRawBufferPointer</span>，允许你把一整块儿的内存作为一个含有 <span class="type">Uint8</span> 值的集合进行查看和修改，在这块内存中，每个值与一个字节的内存相对应。这些类型允许你进入底层编程模式，与此同时直接内存操作也将得不到来自编译器类型安全检查帮助的，相应的对同一内存进行不同类型的解释也是不受限的（译者注：最后一句这里翻译地不准去）。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#### 空指针</span><br><span class="line">在 <span class="type">Objective</span>-<span class="type">C</span> 中，指针类型的声明可以通过标注 \_Nullable 和 \_Nonnull 来表明是否可以接受空值 <span class="literal">nil</span> 或 <span class="type">NULL</span>。在 <span class="type">Swift</span> 中，空指针是通过一个值为 <span class="literal">nil</span> 的可选类型指针来实现。透过一个整数内存地址来构造指针，是可失败的。一个非可选的指针类型不能被赋值为 <span class="literal">nil</span>。</span><br><span class="line"></span><br><span class="line">对应关系如下：</span><br><span class="line"></span><br><span class="line">|  <span class="type">Objective</span>-<span class="built_in">c</span> <span class="type">Syntax</span>   |   <span class="type">Swift</span> <span class="type">Syntax</span>       |</span><br><span class="line">|:----------------------|:---------------------|</span><br><span class="line">|const <span class="type">Type</span> \* \_Nonnull|<span class="type">UnsafePointer</span>\&lt;type\&gt; |</span><br><span class="line">|const <span class="type">Type</span> * \_Nullable|<span class="type">UnsafePointer</span>\&lt;type\&gt;?|</span><br><span class="line">|const <span class="type">Type</span> \* _Null\_unspecified|<span class="type">UnsafePointer</span>\&lt;type\&gt;!|</span><br><span class="line"></span><br><span class="line">	注意(译者注：在<span class="type">Swift</span> <span class="number">4</span>版本中该注意内容以被移除)</span><br><span class="line">	在<span class="type">Swift</span> <span class="number">3</span>之前，nullable和non-nullable指针均通过一个非可选（non-<span class="keyword">optional</span>）指针类型实现。</span><br><span class="line">	将现有代码迁移至<span class="type">Swift</span>最新版本时，可能需要手动修改所有通过<span class="literal">nil</span>初始化的指针为可选类型。</span><br><span class="line">	</span><br><span class="line">#### 指针运算</span><br><span class="line">当处理未知数据类型时，可能会用到不安全的指针操作。在<span class="type">Swift</span>中，可通过运算符对一个指针的值进行位运算，以此来创建一个指定偏移量的新指针。</span><br><span class="line"></span><br><span class="line">``` <span class="type">Swift</span></span><br><span class="line"><span class="keyword">let</span> pointer: <span class="type">UnsafePointer</span>&lt;<span class="type">Int8</span>&gt;</span><br><span class="line"><span class="keyword">let</span> offsetPointer = pointer + <span class="number">24</span></span><br><span class="line"><span class="comment">// offsetPointer is 24 strides ahead of pointer</span></span><br><span class="line"><span class="comment">// offsetPointer 是一个向前偏移了24位的新指针</span></span><br></pre></td></tr></table></figure>
+<pre><code>注意
+如欲了解更多关于 Swift 是如何计算不同数据类型和值的空间大小的，请参考 数据类型空间计算（Data Type Size Calculation）。</code></pre>
+<h4 id="数据类型空间计算（Data-Type-Size-Calculation）（译者注：注意该部分内容变动很大）"><a href="#数据类型空间计算（Data-Type-Size-Calculation）（译者注：注意该部分内容变动很大）" class="headerlink" title="数据类型空间计算（Data Type Size Calculation）（译者注：注意该部分内容变动很大）"></a>数据类型空间计算（Data Type Size Calculation）（译者注：注意该部分内容变动很大）</h4><p>在 C 语言中，可以通过 sizeof 和 alignof 操作符来获取任意变量或数据类型的内存占用大小及对齐情况。在 Swift 中可以通过访问 MemoryLayout<T> 的 size, stride 和 alignment 属性来了解 T 类型的相应情况。例如，timeval 结构体在 Darwin 系统上所占的空间大小和步长是 16, 对齐为 8:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(<span class="type">MemoryLayout</span>&lt;timeval&gt;.size)</span><br><span class="line"><span class="comment">// Prints &quot;16&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="type">MemoryLayout</span>&lt;timeval&gt;.<span class="built_in">stride</span>)</span><br><span class="line"><span class="comment">// Prints &quot;16&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="type">MemoryLayout</span>&lt;timeval&gt;.alignment)</span><br><span class="line"><span class="comment">// Prints &quot;8&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>当在 Swift 中调用的 C 函数需要传入类型大小或值大小的时候，这些就派上用场了。例如，setsockopt(_:_:_:_:_:)函数，可以通过接受一个 timeval 指针和指针所指值的大小来设置sokect接收超时选项（SO_RCVTIMEO）：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> sokfd = socket(<span class="type">AF_INET</span>, <span class="type">SOCK_STREAM</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> optval = timeval(tv_sec: <span class="number">30</span>, tv_usec: <span class="number">0</span>)</span><br><span class="line"><span class="keyword">let</span> optlen = socklen_t（<span class="type">MemoryLayout</span>&lt;timeval&gt;.size)</span><br><span class="line"><span class="keyword">if</span> setsockopt(sockfd, <span class="type">SOL_SOCKET</span>, <span class="type">SO_RCVTIMEO</span>, &amp;optavl, optlen) == <span class="number">0</span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>欲了解更多信息，请参见 MemoryLayout</p>
+<h3 id="仅一次的初始化（One-Time-Initialization）"><a href="#仅一次的初始化（One-Time-Initialization）" class="headerlink" title="仅一次的初始化（One-Time Initialization）"></a>仅一次的初始化（One-Time Initialization）</h3><p>在 C 语言中，POSIX 的 <code>pthread_once()</code> 函数和 Grand Central Dispatch 中的 <code>dipatch_once()</code>、<code>dispatch_once_f()</code> 函数都有保证代码仅被初始化一次的机制。在 Swift 中，全局常量和存储型属性即使被多个线程同时交替存取，也能保证仅初始化一次。这是由语言自身特点来实现的, 因此 POSIX 和 Grand Central Dispatch 中相应的 C 函数未在 Swift 开放。</p>
+<h3 id="预处理命令"><a href="#预处理命令" class="headerlink" title="预处理命令"></a>预处理命令</h3><p>Swift 编译器没有预处理程序。相应地，它通过编译属性，条件编译 block，和语言特性来实现相同功能。因此，预处理命令不会被导入到 Swift 中。</p>
+<h3 id="简单宏命令"><a href="#简单宏命令" class="headerlink" title="简单宏命令"></a>简单宏命令</h3><p>在 Swift 中可通过全局常量来代替，在 C 和 Objective-C 中由 #define 定义的常量。例如，#define FADE_ANNOTATION_DURATION 0.35，可以在 Swift 中被更好的表示为 let FADE_ANNOTATION_DURATION = 0.35。由于宏定义的常量可以被直接映射为 Swift 的全局变量，所以编译器会自动引入那些定在 C 和 Objective—C 源文件中的简单宏定义。</p>
+<h3 id="复杂宏命令"><a href="#复杂宏命令" class="headerlink" title="复杂宏命令"></a>复杂宏命令</h3><p>Swift 没有与 C 或 Objective-C 中的复杂宏命令相应的构功能特性，这里的复杂宏是指那些带有括号，与函数类似，却未用于定义常量的宏。C 和 Objective-C 中的复杂宏命令通常被用来规避类型检查限制，或者充当被大量使用的代码的模板。与此同时宏也让debuging和重构变困难。Swfit中可以通过函数和泛型来更好地达到这一目的。综上，C 和Objective-C中的复杂宏命令在Swift代码中是无效。</p>
+<h3 id="条件编译代码块（Conditional-Compilation-Blocks"><a href="#条件编译代码块（Conditional-Compilation-Blocks" class="headerlink" title="条件编译代码块（Conditional Compilation Blocks)"></a>条件编译代码块（Conditional Compilation Blocks)</h3><p>Swift 和 Objective-C 通过不同的方式实现了代码的条件编译。Swift 通过_条件编译代码块_来实现。例如，如果通过 swift -D DEBUG_LOGGING 设置 DEBUG_LOGGING 条件编译标识，那么编译器就会引入位于条件代码块中的代码。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">#if</span> <span class="type">DEBUG_LOGGING</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Flag enabled.&quot;</span>)</span><br><span class="line"><span class="keyword">#endif</span></span><br></pre></td></tr></table></figure>
+
+<p>编译条件判断中可以包含 true 和 false 字面值，自定义条件判断标识（通过 -D &lt;#flag#&gt;指定)，和下表所列的平台判断标识。</p>
+<table>
+<thead>
+<tr>
+<th align="left">Function</th>
+<th align="left">Valid arguments</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">os()</td>
+<td align="left">OSX, iOS, watchOS, tvOS, Linux</td>
+</tr>
+<tr>
+<td align="left">arch()</td>
+<td align="left">x86_64, arm, arm64, i386</td>
+</tr>
+<tr>
+<td align="left">swift()</td>
+<td align="left">&gt;=followed by version number</td>
+</tr>
+</tbody></table>
+<pre><code>注意
+通过arch(arm)来判断ARM 64设备，不会返回true。当代码以32位iOS模拟器为目标编译时，arch(i386)会返回true。</code></pre>
+<p>通过逻辑与 &amp;&amp; 和逻辑或 || 符号可以混合判断条件，通过逻辑否 ！可以做假条件判断，还可以通过 #elseif 和 #else 来添加条件判断分支，此外在一个选择编译代码块儿中还能嵌套另一个选择编译代码块儿。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">#if</span> arch(arm) || arch(arm64)</span><br><span class="line">	<span class="keyword">#if</span> <span class="type">Swift</span>(&gt;=<span class="number">3.0</span>)</span><br><span class="line">		<span class="built_in">print</span>(<span class="string">&quot;Using Swift 3 ARM code&quot;</span>)</span><br><span class="line">	<span class="keyword">#else</span></span><br><span class="line">		<span class="built_in">print</span>(<span class="string">&quot;Using Swift 2.2 ARM code&quot;</span>)</span><br><span class="line">	<span class="keyword">#endif</span></span><br><span class="line"><span class="keyword">#elseif</span> arch(x86_64)</span><br><span class="line">	<span class="built_in">print</span>(<span class="string">&quot;Using 64-bit x86 code.&quot;</span>)</span><br><span class="line"><span class="keyword">#else</span></span><br><span class="line">	<span class="built_in">print</span>(<span class="string">&quot;Using general code.&quot;</span>)</span><br><span class="line"><span class="keyword">#endif</span></span><br></pre></td></tr></table></figure>
+
+<p>与 C 语言的预编译不同，Swift 的条件编译代码块儿必须完整且语法正确，这是因为 Swift 代码即使尚未被编译，也会进行语法检查。<br>特例，如果条件编译代码块儿包含 swift() 判断，那么这个表达式仅在 Swift 版本与判断条件相匹配的时候才会去解析该表达式。这是为了确保旧版编译器不会去尝试解析较新版本的 Swift 语法。</p>
+<h3 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h3><p>本文译自《Using Swift with Cocoa and Objective-C （Swift 4 beta）》书中 Interacting with C APIs 一章。相对于 Swift 3 新版本既对原有实现作出了改变，又有新增加了一些对 C 的支持，为了便于对比还是选择新开了一篇文章。</p>
+<p>受限于译者英语水平及翻译经验，译文难免有词不达意，甚至错误的地方，还望不吝赐教，予以指正</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2017/07/14/Interactive-with-C-APIs-Swift-4-beta/" title="【译】Swift与 C API的交互（Swift 4 beta）">https://dracarys.github.io/2017/07/14/Interactive-with-C-APIs-Swift-4-beta/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Swift/" rel="tag"><i class="fa fa-tag"></i> Swift</a>
+              <a href="/tags/C-%E8%AF%AD%E8%A8%80/" rel="tag"><i class="fa fa-tag"></i> C 语言</a>
+              <a href="/tags/%E6%B7%B7%E7%BC%96/" rel="tag"><i class="fa fa-tag"></i> 混编</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2017/03/28/How-to-change-your-Icon-in-code/" rel="prev" title="iOS:通过代码更新应用图标">
+                  <i class="fa fa-chevron-left"></i> iOS:通过代码更新应用图标
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/02/04/How-to-build-a-private-blockchain-on-Mac/" rel="next" title="Mac环境下搭建以太坊私有链">
+                  Mac环境下搭建以太坊私有链 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : '9733c572e6af6476e6dd3a93e50f32c1',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="深度优先搜索(DFS)是遍历或搜索树 或 图等数据结构的一种算法。从源点开始，在回溯之前尽量遍历较远的每一个分支。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】数据结构与算法——深度优先搜索">
+<meta property="og:url" content="https://dracarys.github.io/2019/04/21/Algorithm-club-depth-first-search/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="深度优先搜索(DFS)是遍历或搜索树 或 图等数据结构的一种算法。从源点开始，在回溯之前尽量遍历较远的每一个分支。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://github.com/Dracarys/swift-algorithm-club/raw/master/Depth-First%20Search/Images/AnimatedExample.gif">
+<meta property="og:image" content="https://github.com/Dracarys/swift-algorithm-club/raw/master/Depth-First%20Search/Images/TraversalTree.png">
+<meta property="article:published_time" content="2019-04-21T07:40:05.000Z">
+<meta property="article:modified_time" content="2019-04-21T08:09:30.000Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="Swift">
+<meta property="article:tag" content="Algorithm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/Dracarys/swift-algorithm-club/raw/master/Depth-First%20Search/Images/AnimatedExample.gif">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2019/04/21/Algorithm-club-depth-first-search/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>【译】数据结构与算法——深度优先搜索 | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E7%94%BB%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text">动画示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DFS%E9%80%82%E7%94%A8%E5%93%AA%E4%BA%9B%E5%9C%BA%E6%99%AF%E5%91%A2%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">DFS适用哪些场景呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">4.</span> <span class="nav-text">最后</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2019/04/21/Algorithm-club-depth-first-search/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【译】数据结构与算法——深度优先搜索
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2019-04-21 15:40:05 / 修改时间：16:09:30" itemprop="dateCreated datePublished" datetime="2019-04-21T15:40:05+08:00">2019-04-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Algorithm-club/" itemprop="url" rel="index"><span itemprop="name">Algorithm club</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>深度优先搜索(DFS)是遍历或搜索<a target="_blank" rel="noopener" href="https://github.com/Dracarys/swift-algorithm-club/tree/master/Tree">树</a> 或 <a target="_blank" rel="noopener" href="https://github.com/Dracarys/swift-algorithm-club/tree/master/Graph">图</a>等数据结构的一种算法。从源点开始，在回溯之前尽量遍历较远的每一个分支。</p>
+<a id="more"></a>
+
+<p>深度优先搜索既适用于有向图也适用于无向图。</p>
+<h2 id="动画示例"><a href="#动画示例" class="headerlink" title="动画示例"></a>动画示例</h2><p>下面演示了深度优先搜索是如何搜索一张图的：</p>
+<p><img src="https://github.com/Dracarys/swift-algorithm-club/raw/master/Depth-First%20Search/Images/AnimatedExample.gif" alt="Animated example"></p>
+<p>首先从 <code>A</code> 节点开始。我们先寻找该节点的第一个临近节点，并访问它，即示例中的节点 <code>B</code>。之后，在查找 <code>B</code> 节点的第一个临近节点，并访问它即节点 <code>D</code>。至此，<code>D</code> 节点已经没有未被访问过的临近节点，此时回溯到节点 <code>B</code>并访问它的另一个临近节点 <code>E</code>。依此类推，直至访问完图中所有节点。</p>
+<p>依次访问它的第一个临近节点，直至无法继续，然后在回溯到可继续的那个节点（即存在未被访问的临近节点）。到回溯完所有路径并返回起始节点 <code>A</code> 时，搜索完毕。</p>
+<p>以上图为例，依次访问的节点顺序为：<code>A</code>, <code>B</code>, <code>D</code>, <code>E</code>, <code>H</code>, <code>F</code>, <code>G</code>, <code>C</code>。<br>For the example, the nodes were visited in the order <code>A</code>, <code>B</code>, <code>D</code>, <code>E</code>, <code>H</code>, <code>F</code>, <code>G</code>, <code>C</code>.</p>
+<p>深度优先搜索的过程也可以以树的形式呈现：</p>
+<p><img src="https://github.com/Dracarys/swift-algorithm-club/raw/master/Depth-First%20Search/Images/TraversalTree.png" alt="Traversal tree"></p>
+<p>父节点即是那个通过它“发现”该节点的节点。根节是深度优先算法的起始节点。每一个分支都代表一次回溯。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>一个用递归实现的深度优先搜索：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">depthFirstSearch</span><span class="params">(<span class="keyword">_</span> graph: Graph, source: Node)</span></span> -&gt; [<span class="type">String</span>] &#123;</span><br><span class="line">  <span class="keyword">var</span> nodesExplored = [source.label]</span><br><span class="line">  source.visited = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> edge <span class="keyword">in</span> source.neighbors &#123;</span><br><span class="line">    <span class="keyword">if</span> !edge.neighbor.visited &#123;</span><br><span class="line">      nodesExplored += depthFirstSearch(graph, source: edge.neighbor)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> nodesExplored</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与<a target="_blank" rel="noopener" href="https://github.com/Dracarys/swift-algorithm-club/tree/master/Breadth-First%20Search">广度优先搜索</a>优先访问临近节点不同，深度优先搜索是尽可能地深入访问（树或图）。</p>
+<p>将下列代码复制到 playground 中尝试一下：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> graph = <span class="type">Graph</span>()</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> nodeA = graph.addNode(<span class="string">&quot;a&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeB = graph.addNode(<span class="string">&quot;b&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeC = graph.addNode(<span class="string">&quot;c&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeD = graph.addNode(<span class="string">&quot;d&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeE = graph.addNode(<span class="string">&quot;e&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeF = graph.addNode(<span class="string">&quot;f&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeG = graph.addNode(<span class="string">&quot;g&quot;</span>)</span><br><span class="line"><span class="keyword">let</span> nodeH = graph.addNode(<span class="string">&quot;h&quot;</span>)</span><br><span class="line"></span><br><span class="line">graph.addEdge(nodeA, neighbor: nodeB)</span><br><span class="line">graph.addEdge(nodeA, neighbor: nodeC)</span><br><span class="line">graph.addEdge(nodeB, neighbor: nodeD)</span><br><span class="line">graph.addEdge(nodeB, neighbor: nodeE)</span><br><span class="line">graph.addEdge(nodeC, neighbor: nodeF)</span><br><span class="line">graph.addEdge(nodeC, neighbor: nodeG)</span><br><span class="line">graph.addEdge(nodeE, neighbor: nodeH)</span><br><span class="line">graph.addEdge(nodeE, neighbor: nodeF)</span><br><span class="line">graph.addEdge(nodeF, neighbor: nodeG)</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> nodesExplored = depthFirstSearch(graph, source: nodeA)</span><br><span class="line"><span class="built_in">print</span>(nodesExplored)</span><br></pre></td></tr></table></figure>
+
+<p>输出结果应为：<code>[&quot;a&quot;, &quot;b&quot;, &quot;d&quot;, &quot;e&quot;, &quot;h&quot;, &quot;f&quot;, &quot;g&quot;, &quot;c&quot;]</code>。</p>
+<h2 id="DFS适用哪些场景呢？"><a href="#DFS适用哪些场景呢？" class="headerlink" title="DFS适用哪些场景呢？"></a>DFS适用哪些场景呢？</h2><p>深度优先搜索可以用来解决很多问题，例如：</p>
+<ul>
+<li>查找一个稀疏图（Sparse graph）的连接构成</li>
+<li>对图中节点进行<a target="_blank" rel="noopener" href="https://github.com/Dracarys/swift-algorithm-club/tree/master/Topological%20Sort">拓扑排序（Topological sorting）</a></li>
+<li>查询图中的<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Bridge_(graph_theory)#Bridge-finding_algorithm">Bridges</a></li>
+<li>其它!<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2></li>
+</ul>
+<p>该系列文章翻译自 <a target="_blank" rel="noopener" href="https://www.raywenderlich.com/">Raywenderlich</a> 的开源项目：<a target="_blank" rel="noopener" href="https://github.com/raywenderlich/swift-algorithm-club">swift-algorithm-club</a>，意在帮助有一定基础的同学进行回顾，如果你才接触，那么建议移步<a target="_blank" rel="noopener" href="https://www.raywenderlich.com/157949/swift-algorithm-club-depth-first-search">详细教程</a></p>
+<p><em>Written for Swift Algorithm Club by Paulo Tanaka and Matthijs Hollemans</em></p>
+<p><em>由 William Han 翻译</em></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2019/04/21/Algorithm-club-depth-first-search/" title="【译】数据结构与算法——深度优先搜索">https://dracarys.github.io/2019/04/21/Algorithm-club-depth-first-search/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Swift/" rel="tag"><i class="fa fa-tag"></i> Swift</a>
+              <a href="/tags/Algorithm/" rel="tag"><i class="fa fa-tag"></i> Algorithm</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/04/21/Algorithm-club-breadth-first-search/" rel="prev" title="【译】数据结构与算法——广度优先搜索">
+                  <i class="fa fa-chevron-left"></i> 【译】数据结构与算法——广度优先搜索
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/07/31/Algorithm-club-hash-table/" rel="next" title="【译】数据结构与算法——哈希表">
+                  【译】数据结构与算法——哈希表 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : '7790b2052bd5c8a86cde611467c225fd',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

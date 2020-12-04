@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="一个好的溅落式启动页（别被毫无动画效果的静态启动页迷惑），使开发人员有机会在展示动画期间，从后端获取必要的数据。同时它在应用启动期间让用户始终保持高昂兴趣方面也发挥了重要作用。 虽然溅落式启动页已广泛存在，但是你很难找到一个如Uber这般出色的。在2016年的首季，Uber释出一个由CEO领导的品牌重塑战略，品牌重塑的成果之一，便是一个非常炫酷的溅落式启动页。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】高仿Uber启动页">
+<meta property="og:url" content="https://dracarys.github.io/2016/08/02/How-to-create-an-Uber-splash-screen/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="一个好的溅落式启动页（别被毫无动画效果的静态启动页迷惑），使开发人员有机会在展示动画期间，从后端获取必要的数据。同时它在应用启动期间让用户始终保持高昂兴趣方面也发挥了重要作用。 虽然溅落式启动页已广泛存在，但是你很难找到一个如Uber这般出色的。在2016年的首季，Uber释出一个由CEO领导的品牌重塑战略，品牌重塑的成果之一，便是一个非常炫酷的溅落式启动页。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-08-02T07:46:34.000Z">
+<meta property="article:modified_time" content="2018-12-18T14:41:33.000Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="Swift">
+<meta property="article:tag" content="iOS">
+<meta property="article:tag" content="Animation">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2016/08/02/How-to-create-an-Uber-splash-screen/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>【译】高仿Uber启动页 | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B"><span class="nav-number">1.</span> <span class="nav-text">开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%85%E8%90%BD%E5%BC%8F%E5%90%AF%E5%8A%A8%E9%A1%B5%E8%A7%86%E5%9B%BE%E5%8F%8A%E5%85%B6%E5%9B%BE%E5%B1%82%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">溅落式启动页视图及其图层结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A9%E5%9C%86%E5%BD%A2%E5%8A%A8%E8%B5%B7%E6%9D%A5"><span class="nav-number">3.</span> <span class="nav-text">让圆形动起来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A9%E7%BA%BF%E6%AE%B5%E5%8A%A8%E8%B5%B7%E6%9D%A5"><span class="nav-number">4.</span> <span class="nav-text">让线段动起来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A9%E6%96%B9%E5%9D%97%E5%8A%A8%E8%B5%B7%E6%9D%A5"><span class="nav-number">5.</span> <span class="nav-text">让方块动起来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%AE%E7%BD%A9"><span class="nav-number">6.</span> <span class="nav-text">遮罩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E6%A0%BC"><span class="nav-number">7.</span> <span class="nav-text">网格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A9%E7%93%A6%E7%89%87%E8%A7%86%E5%9B%BE%EF%BC%88TileView%EF%BC%89%E5%8A%A8%E8%B5%B7%E6%9D%A5"><span class="nav-number">8.</span> <span class="nav-text">让瓦片视图（TileView）动起来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E4%B8%8B%E6%9D%A5"><span class="nav-number">9.</span> <span class="nav-text">接下来</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">10.</span> <span class="nav-text">最后</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2016/08/02/How-to-create-an-Uber-splash-screen/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【译】高仿Uber启动页
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2016-08-02 15:46:34" itemprop="dateCreated datePublished" datetime="2016-08-02T15:46:34+08:00">2016-08-02</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2018-12-18 22:41:33" itemprop="dateModified" datetime="2018-12-18T22:41:33+08:00">2018-12-18</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/iOS%E5%8A%A8%E7%94%BB/" itemprop="url" rel="index"><span itemprop="name">iOS动画</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>一个好的溅落式启动页（别被毫无动画效果的静态启动页迷惑），使开发人员有机会在展示动画期间，从后端获取必要的数据。同时它在应用启动期间让用户始终保持高昂兴趣方面也发挥了重要作用。</p>
+<p>虽然溅落式启动页已广泛存在，但是你很难找到一个如Uber这般出色的。在2016年的首季，Uber释出一个由CEO领导的品牌重塑战略，品牌重塑的成果之一，便是一个非常炫酷的溅落式启动页。</p>
+<a id="more"></a>
+
+<p>本文以仿制Uber启动动画为目标。其中运用了大量的<strong>CAlayer</strong>和<strong>CAAnimation</strong>类，及其相应子类。相对于概念介绍，本文更着重于如何运用这些类去实现一个产品级的动画效果。如需了解动画背后的相关知识，请访问 <em>Marin Todorov</em> 的系列视频教程：<br><a target="_blank" rel="noopener" href="https://www.raywenderlich.com/u/icanzilb"><strong>Intermediate iOS Animation</strong></a></p>
+<h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><p>鉴于本文涉及的动画众多，这里提供一个已为后续动画创建好所有CALayer的<a target="_blank" rel="noopener" href="https://koenig-media.raywenderlich.com/uploads/2016/06/Fuber-starter.zip">起始工程</a>。</p>
+<p>起始工程是一个叫做Fuber的应用，Fuber提供（Segway）驾乘共享服务，乘客通过向Segway驾驶员发出请求，来邀请其搭载自己抵达城市的任何地方。Fuber发展迅速，已在60多个国家为用户提供服务，但也面临众多国家的反对和工会要求其必须与司机签订合同的问题。:](原作者卖萌了)</p>
+<center>![Splash screen](https://koenig-media.raywenderlich.com/uploads/2016/05/fuber_logo.png)</center>
+
+<p>最终，我们会创建一个如下的非常炫酷的溅落式启动页:</p>
+<center>![Fuber Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/Fuber-Animation.gif)</center>
+
+<p>打开并运行起始工程，简单浏览一下工程结构。</p>
+<p>首先从视图控制器开始，应用通过负责子视图（切入）切出任务的<strong>RootContainerViewController</strong>加载<strong>SplashViewController</strong>。父视图控制器从启动页开始运行，直至应用的所有准备工作全部完成。这期间应用会连接到后端，获取后续所需数据。需要指出的是，在这个简单的项目中启动页被设计成了一个独立的模块。</p>
+<p>在<strong>RootContainerViewController</strong>中已经实现好了两个方法：<code>showSplashViewController()</code>和 <code>showSplashViewControllerNoPing()</code>。<br>由于教程中大部分时间，都在调用<code>showSplashViewControllerNoPing()</code>方法（调试启动动画），所以我们先将精力放在<strong>SplashViewController</strong>的子视图动画创建上，然后在通过<code>showSplashViewController()</code>模拟一个访问API的延迟效果，并随即跳转到主视图控制器。</p>
+<h2 id="溅落式启动页视图及其图层结构"><a href="#溅落式启动页视图及其图层结构" class="headerlink" title="溅落式启动页视图及其图层结构"></a>溅落式启动页视图及其图层结构</h2><p><strong>SplashViewController</strong>的视图（view）包含两个子视图（subview）。 第一个子视图是用于构成波纹网格背景的<strong>TileGridview</strong>，它包含了一系列按网格排列的<strong>TileView</strong>实例。另一个子视图名为<strong>AnimatedULogoView</strong>，它构成了 U 字型的动画图标。</p>
+<center>![Splash Screen](https://koenig-media.raywenderlich.com/uploads/2016/05/Fuber-View-Hierarchy-1.png)</center>
+
+<p><strong>AnimatedULogoView</strong>包含4个<strong>CAShapeLayer</strong>:</p>
+<ul>
+<li><strong>circleLayer</strong> 用于实现字母 U 的白色背景</li>
+<li><strong>lineLayer</strong> 用于实现从<strong>circleLayer</strong>的中心到边缘的一条线段</li>
+<li><strong>squareLayer</strong> 用于实现位于<strong>circleLayer</strong>中心位置的方块</li>
+<li><strong>maskLayer</strong> 用作视图遮罩，通过改变其<strong>bounds</strong>的动画效果，来将其它所有图层的动画效果整齐划一地混合起来。</li>
+</ul>
+<p>通过组合这几个<strong>CAShaperLayer</strong>动画，共同实现了<strong>Fuber</strong>中字母 <strong>U</strong> 的动画效果。</p>
+<center>![RiderIconView](https://koenig-media.raywenderlich.com/uploads/2016/05/RiderIconView.gif)</center>
+
+<p>了解了图层的构成之后，接下来我们就来添加一些动画让<strong>AnimatedULogoView</strong>动起来吧。</p>
+<h2 id="让圆形动起来"><a href="#让圆形动起来" class="headerlink" title="让圆形动起来"></a>让圆形动起来</h2><p>创建复杂动画的关键，在于排除视觉干扰专注于我们正在实现的部分。 打开<strong>AnimatedULogoView.swift</strong>文件。找到<code>init(frame:)</code>方法，注释掉除<strong>circleLayer</strong>外其它向视图中添加子图层（sublayer）的方法，完成动画后会再将其全部添加回来。注释完成后的代码如下:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="keyword">init</span>(frame: <span class="type">CGRect</span>) &#123;</span><br><span class="line"><span class="keyword">super</span>.<span class="keyword">init</span>(frame: frame)</span><br><span class="line"></span><br><span class="line">circleLayer = generateCircleLayer()</span><br><span class="line">lineLayer = generateLineLayer()</span><br><span class="line">squareLayer = generateSquareLayer()</span><br><span class="line">maskLayer = generateMaskLayer()</span><br><span class="line"></span><br><span class="line"><span class="comment">//  layer.mask = maskLayer</span></span><br><span class="line">layer.addSublayer(circleLayer)</span><br><span class="line"><span class="comment">//  layer.addSublayer(lineLayer)</span></span><br><span class="line"><span class="comment">//  layer.addSublayer(squareLayer)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>找到<code>generateCircleLayer()</code>方法，了解下圆形是如何被创建的。其实只是简单地通过 <em>UIBezierPath</em> 创建了一个 <em>CAShapeLayer</em> (图层)。 注意看这行代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">layer.path = <span class="type">UIBezierPath</span>(arcCenter: <span class="type">CGPointZero</span>, </span><br><span class="line">radius: radius/<span class="number">2</span>, </span><br><span class="line">startAngle: -<span class="type">CGFloat</span>(<span class="type">M_PI_2</span>), </span><br><span class="line">endAngle: <span class="type">CGFloat</span>(<span class="number">3</span>*<span class="type">M_PI_2</span>),</span><br><span class="line">clockwise: <span class="literal">true</span>).<span class="type">CGPath</span></span><br></pre></td></tr></table></figure>
+
+<p>向 <em>startAngle</em> 传入 0 或使用默认值, 弧线会从右侧（3点钟位置）开始。传入 <strong>-M_PI_2</strong> 即 -90度, 则会从顶部开始，如果 <em>endAngle</em> 恰好是270度即 *<em>3 * M_PI_2*</em>，弧线则再次回到顶点（形成一个圆形）。注意为了绘制的动画效果，我们使用圆形的半径作为<strong>lineWidth</strong>。</p>
+<p><strong>circleLayer</strong>的动画需要三个<strong>CAAnimation</strong>子类来实现：一个作用于<strong>stokeEnd</strong>的<strong>CAKeyframeAnimation</strong>动画，一个作用于<strong>transform</strong>的<strong>CABasicAnimation</strong>动画，和一个负责将两部分动画组合起来的<strong>CAAnimationGroup</strong>。这将一次性同时创建所有动画。</p>
+<p>在事先写好的<code>animateCircleLayer()</code>方法中添加如下代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// strokeEnd</span></span><br><span class="line"><span class="keyword">let</span> strokeEndAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;strokeEnd&quot;</span>)</span><br><span class="line">strokeEndAnimation.timingFunction = strokeEndTimingFunction</span><br><span class="line">strokeEndAnimation.duration = kAnimationDuration - kAnimationDurationDelay</span><br><span class="line">strokeEndAnimation.values = [<span class="number">0.0</span>, <span class="number">1.0</span>]</span><br><span class="line">strokeEndAnimation.keyTimes = [<span class="number">0.0</span>, <span class="number">1.0</span>]</span><br></pre></td></tr></table></figure>
+
+<p>通过向动画的<strong>Values</strong>属性提供的 0.0 和 1.0，我们便透过Core Animation框架生成了一个从 <em>startAngle</em> 到 <em>endAngle</em> 沿顺时针旋转的动画。随着 <em>strokeEnd</em> 属性值的增加，弧线沿着圆周慢慢伸展，圆形也渐渐被”填满”。在这个例子中，如果我们将<strong>values</strong>属性的值设为[0.0, 0.5]，则仅会画半个圆，这是因为 <em>StrokeEnd</em> 在动画结束时刚达好到圆周的一半。</p>
+<blockquote>
+<p>译者注：“圆形也渐渐被‘填满’”一句的填满是引起来的，并不是真的被填满，而是描边的 <em>lineWidth</em> 与圆形半径相同，从而产生了填满的视觉效果。可参考<code>generateCircleLayer()</code>方法中<code>layer.fillColor = UIColor.clear.cgColor</code>这段代码，事实上填充色被设置为透明，</p>
+</blockquote>
+<p>现在添加形变（transform）动画:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// transform</span></span><br><span class="line"><span class="keyword">let</span> transformAnimation = <span class="type">CABasicAnimation</span>(keyPath: <span class="string">&quot;transform&quot;</span>)</span><br><span class="line">transformAnimation.timingFunction = strokeEndTimingFunction</span><br><span class="line">transformAnimation.duration = kAnimationDuration - kAnimationDurationDelay</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> startingTransform = <span class="type">CATransform3DMakeRotation</span>(-<span class="type">CGFloat</span>(<span class="type">M_PI_4</span>), <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)</span><br><span class="line">startingTransform = <span class="type">CATransform3DScale</span>(startingTransform, <span class="number">0.25</span>, <span class="number">0.25</span>, <span class="number">1</span>)</span><br><span class="line">transformAnimation.fromValue = <span class="type">NSValue</span>(<span class="type">CATransform3D</span>: startingTransform)</span><br><span class="line">transformAnimation.toValue = <span class="type">NSValue</span>(<span class="type">CATransform3D</span>: <span class="type">CATransform3DIdentity</span>)</span><br></pre></td></tr></table></figure>
+
+<p>该动画同时实现了放大和沿 Z 轴旋转的两个形变。这使得圆形在沿顺时针旋转45度的同时逐渐变大。这里的旋转很重要，因为圆形的旋转要与<strong>lineLayer</strong>和其它图层一块动起来时的位置和速度保持一致。</p>
+<p>最后在<code>animateCircleLayer()</code>方法的最下面添加一个<strong>CAAnimationGroup</strong>。这个动画组将包含之前的两个动画，这样我们仅向<strong>circleLayer</strong>图层添加一次动画即可。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Group</span></span><br><span class="line"><span class="keyword">let</span> groupAnimation = <span class="type">CAAnimationGroup</span>()</span><br><span class="line">groupAnimation.animations = [strokeEndAnimation, transformAnimation]</span><br><span class="line">groupAnimation.repeatCount = <span class="type">Float</span>.infinity</span><br><span class="line">groupAnimation.duration = kAnimationDuration</span><br><span class="line">groupAnimation.beginTime = beginTime</span><br><span class="line">groupAnimation.timeOffset = startTimeOffset</span><br><span class="line"></span><br><span class="line">circleLayer.addAnimation(groupAnimation, forKey: <span class="string">&quot;looping&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里我们修改了CAAnimationGroup的两个重要属性：<strong>beginTime</strong> 和 <strong>timeOffset</strong>。如果你对其中任何一个不熟悉，那么你都可以在<a target="_blank" rel="noopener" href="http://ronnqvi.st/controlling-animation-timing/">这里</a>找到关于该属性的介绍和使用说明。<br>将 <strong>groupAnimation</strong> 的 <strong>beginTime</strong> 设置为与父视图相同。</p>
+<p>对<strong>timeOffeset</strong>的设置是必要的，因为动画首次运行时实际上是从一半开始的。当完成更多动画效果后，你可以试着改变<strong>startTimeOffset</strong>的值，并观察动画在视觉效果上的不同。 </p>
+<p>将动画组添加到<strong>circleLayer</strong>之后，编译并运行应用，检查下动画效果.</p>
+<center>![Splash Screen CircleIn Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/CircleIn-Animation.gif)</center>
+
+<blockquote>
+<p>注意: 试着删除<strong>groupAnimation.animations</strong>数组中的<strong>strokeEndAnimation</strong>或<strong>transformAnimation</strong>，以确认每个动画具体实现了哪些视觉效果. 可以按该方法再去验证一下文中的其它动画，你会惊讶于，仅仅改变动画的组合方式就可以产生如此令人难以预料的独特视觉效果.</p>
+</blockquote>
+<h2 id="让线段动起来"><a href="#让线段动起来" class="headerlink" title="让线段动起来"></a>让线段动起来</h2><p>完成了<strong>circleLayer</strong>的动画, 接下来我们再来完成<strong>lineLayer</strong>动画。还是在 <strong>AnimatedULogoView.swift</strong>文件中, 找到<code>startAnimating()</code>方法并注释掉除<code>animateLineLayer()</code>外的所有动画调用。注释后的代码如下:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">func</span> <span class="title">startAnimating</span><span class="params">()</span></span> &#123;</span><br><span class="line">beginTime = <span class="type">CACurrentMediaTime</span>()</span><br><span class="line">layer.anchorPoint = <span class="type">CGPointZero</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//  animateMaskLayer()</span></span><br><span class="line"><span class="comment">//  animateCircleLayer()</span></span><br><span class="line">animateLineLayer()</span><br><span class="line"><span class="comment">//  animateSquareLayer()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外, 修改<code>init(frame:)</code>方法中的代码，只显示<strong>circleLayer</strong>和<strong>lineLayer</strong>两个图层:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="keyword">init</span>(frame: <span class="type">CGRect</span>) &#123;</span><br><span class="line"><span class="keyword">super</span>.<span class="keyword">init</span>(frame: frame)</span><br><span class="line"></span><br><span class="line">circleLayer = generateCircleLayer()</span><br><span class="line">lineLayer = generateLineLayer()</span><br><span class="line">squareLayer = generateSquareLayer()</span><br><span class="line">maskLayer = generateMaskLayer()</span><br><span class="line"></span><br><span class="line"><span class="comment">//  layer.mask = maskLayer</span></span><br><span class="line">layer.addSublayer(circleLayer)</span><br><span class="line">layer.addSublayer(lineLayer)</span><br><span class="line"><span class="comment">//  layer.addSublayer(squareLayer)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注释掉图层和动画后, 转到<code>animateLineLayer()</code>方法并实现下面这组动画:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// lineWidth</span></span><br><span class="line"><span class="keyword">let</span> lineWidthAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;lineWidth&quot;</span>)</span><br><span class="line">lineWidthAnimation.values = [<span class="number">0.0</span>, <span class="number">5.0</span>, <span class="number">0.0</span>]</span><br><span class="line">lineWidthAnimation.timingFunctions = [strokeEndTimingFunction, circleLayerTimingFunction]</span><br><span class="line">lineWidthAnimation.duration = kAnimationDuration</span><br><span class="line"><span class="comment">// Swift 3.0 keyTimes是一个NSNumber数组</span></span><br><span class="line">lineWidthAnimation.keyTimes = [<span class="number">0.0</span>, <span class="number">1.0</span>-kAnimationDurationDelay/kAnimationDuration, <span class="number">1.0</span>]</span><br></pre></td></tr></table></figure>
+
+<p>该动画会使<strong>lineLayer</strong>的宽度（width）呈现出先增后减的效果。</p>
+<p>再为接下来的动画添加如下代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// transform</span></span><br><span class="line"><span class="keyword">let</span> transformAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;transform&quot;</span>)</span><br><span class="line">transformAnimation.timingFunctions = [strokeEndTimingFunction, circleLayerTimingFunction]</span><br><span class="line">transformAnimation.duration = kAnimationDuration</span><br><span class="line">transformAnimation.keyTimes = [<span class="number">0.0</span>, <span class="number">1.0</span>-kAnimationDurationDelay/kAnimationDuration, <span class="number">1.0</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> transform = <span class="type">CATransform3DMakeRotation</span>(-<span class="type">CGFloat</span>(<span class="type">M_PI_4</span>), <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>)</span><br><span class="line">transform = <span class="type">CATransform3DScale</span>(transform, <span class="number">0.25</span>, <span class="number">0.25</span>, <span class="number">1.0</span>)</span><br><span class="line">transformAnimation.values = [<span class="type">NSValue</span>(<span class="type">CATransform3D</span>: transform),</span><br><span class="line"><span class="type">NSValue</span>(<span class="type">CATransform3D</span>: <span class="type">CATransform3DIdentity</span>),</span><br><span class="line"><span class="type">NSValue</span>(<span class="type">CATransform3D</span>: <span class="type">CATransform3DMakeScale</span>(<span class="number">0.15</span>, <span class="number">0.15</span>, <span class="number">1.0</span>))]</span><br></pre></td></tr></table></figure>
+
+<p>与<strong>circleLayer</strong>的形变动画非常相似, 这里我们定义了个一个沿 Z 轴顺时针旋转的动画。 此外我们还为线段添加了一个先缩小到25%，再恢复到原有尺寸，最后再缩小到15%的形变动画.</p>
+<p>通过<strong>CAAnimationGroup</strong>将动画组合起来，并添加到<strong>lineLayer</strong>上：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Group</span></span><br><span class="line"><span class="keyword">let</span> groupAnimation = <span class="type">CAAnimationGroup</span>()</span><br><span class="line">groupAnimation.repeatCount = <span class="type">Float</span>.infinity</span><br><span class="line">groupAnimation.removedOnCompletion = <span class="literal">false</span></span><br><span class="line">groupAnimation.duration = kAnimationDuration</span><br><span class="line">groupAnimation.beginTime = beginTime</span><br><span class="line">groupAnimation.animations = [lineWidthAnimation, transformAnimation]</span><br><span class="line">groupAnimation.timeOffset = startTimeOffset</span><br><span class="line"></span><br><span class="line">lineLayer.addAnimation(groupAnimation, forKey: <span class="string">&quot;looping&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>编译并运行，注意观察变化.</p>
+<center>![Splash Screen Knockoutline Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/Knockoutline-Animation.gif)</center>
+
+<p>注意我们设置了相同的初始形变值**-M_PI_4<strong>，以便线段（line）和圆形（circle）在绘制时能对齐。为此我们还将</strong>keyTimes** 设置为<code>[0.0, 1.0-kAnimationDurationDelay/kAnimationDuration, 1.0]</code>。 数组中首尾两个元素是确定的: 0 代表动画开始那一刻，1.0 代表动画结束那一刻，然后通过计算来获取圆形绘制刚刚结束、第二部分的动画即将开始时的那一刻。由于它是一个延迟的动画效果，所以我们还需要从 1.0 中减去通过<strong>kAnimationDurationDelay</strong>除以<strong>kAnimationDuration</strong>而得到的确切百分比，这是因为我们想让动画在结束后的延迟过程中再返回到起点。（译者：形成一个循环动画，否则会出现跳跃，致使动画不连贯）</p>
+<p><strong>circleLayer</strong>和<strong>lineLayer</strong>动画都已完成，接下来我们该完成中间的方块动画了。</p>
+<h2 id="让方块动起来"><a href="#让方块动起来" class="headerlink" title="让方块动起来"></a>让方块动起来</h2><p>与之前类似。 在<code>startAnimating()</code>函数中注释掉除<code>animateSquareLayer</code>外的其它动画方法调用。然后在像下面这样修改<code>init(frame:)</code>方法的代码：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="keyword">init</span>(frame: <span class="type">CGRect</span>) &#123;</span><br><span class="line"><span class="keyword">super</span>.<span class="keyword">init</span>(frame: frame)</span><br><span class="line"></span><br><span class="line">circleLayer = generateCircleLayer()</span><br><span class="line">lineLayer = generateLineLayer()</span><br><span class="line">squareLayer = generateSquareLayer()</span><br><span class="line">maskLayer = generateMaskLayer()</span><br><span class="line"></span><br><span class="line"><span class="comment">//  layer.mask = maskLayer</span></span><br><span class="line">layer.addSublayer(circleLayer)</span><br><span class="line"><span class="comment">//  layer.addSublayer(lineLayer)</span></span><br><span class="line">layer.addSublayer(squareLayer)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完成后转到<code>animateSquareLayer()</code>方法实现如下动画代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// bounds</span></span><br><span class="line"><span class="keyword">let</span> b1 = <span class="type">NSValue</span>(<span class="type">CGRect</span>: <span class="type">CGRect</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, width: <span class="number">2.0</span>/<span class="number">3.0</span> * squareLayerLength, height: <span class="number">2.0</span>/<span class="number">3.0</span>  * squareLayerLength))</span><br><span class="line"><span class="keyword">let</span> b2 = <span class="type">NSValue</span>(<span class="type">CGRect</span>: <span class="type">CGRect</span>(x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, width: squareLayerLength, height: squareLayerLength))</span><br><span class="line"><span class="keyword">let</span> b3 = <span class="type">NSValue</span>(<span class="type">CGRect</span>: <span class="type">CGRectZero</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> boundsAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;bounds&quot;</span>)</span><br><span class="line">boundsAnimation.values = [b1, b2, b3]</span><br><span class="line">boundsAnimation.timingFunctions = [fadeInSquareTimingFunction, squareLayerTimingFunction]</span><br><span class="line">boundsAnimation.duration = kAnimationDuration</span><br><span class="line">boundsAnimation.keyTimes = [<span class="number">0</span>, <span class="number">1.0</span>-kAnimationDurationDelay/kAnimationDuration, <span class="number">1.0</span>]</span><br></pre></td></tr></table></figure>
+
+<p>这一部分动画用于改变<strong>CALayer</strong>的大小（bounds）。创建一个先将其边长缩小到2/3，再恢复，最终在缩小到零的关键帧动画。</p>
+<p>接下来，为背景色添加动画效果:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// backgroundColor</span></span><br><span class="line"><span class="keyword">let</span> backgroundColorAnimation = <span class="type">CABasicAnimation</span>(keyPath: <span class="string">&quot;backgroundColor&quot;</span>)</span><br><span class="line">backgroundColorAnimation.fromValue = <span class="type">UIColor</span>.whiteColor().<span class="type">CGColor</span></span><br><span class="line">backgroundColorAnimation.toValue = <span class="type">UIColor</span>.fuberBlue().<span class="type">CGColor</span></span><br><span class="line">backgroundColorAnimation.timingFunction = squareLayerTimingFunction</span><br><span class="line">backgroundColorAnimation.fillMode = kCAFillModeBoth</span><br><span class="line">backgroundColorAnimation.beginTime = kAnimationDurationDelay * <span class="number">2.0</span> / kAnimationDuration</span><br><span class="line">backgroundColorAnimation.duration = kAnimationDuration / (kAnimationDuration - kAnimationDurationDelay)</span><br></pre></td></tr></table></figure>
+
+<p>注意上面的<strong>fillMode</strong>属性。一旦<strong>beginTime</strong>不为零时, 动画就会在起始点和结束点保持住当前颜色（CGColor）。这避免了动画在被添加到父CAAnimationGroup时出现闪烁。（译者：这里译的不好:(。请试着改变该属性的设置，看看视觉效果上有什么不同，以加深理解。）</p>
+<p>了解了这些，我们就动手来实现一下吧:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Group</span></span><br><span class="line"><span class="keyword">let</span> groupAnimation = <span class="type">CAAnimationGroup</span>()</span><br><span class="line">groupAnimation.animations = [boundsAnimation, backgroundColorAnimation]</span><br><span class="line">groupAnimation.repeatCount = <span class="type">Float</span>.infinity</span><br><span class="line">groupAnimation.duration = kAnimationDuration</span><br><span class="line">groupAnimation.removedOnCompletion = <span class="literal">false</span></span><br><span class="line">groupAnimation.beginTime = beginTime</span><br><span class="line">groupAnimation.timeOffset = startTimeOffset</span><br><span class="line">squareLayer.addAnimation(groupAnimation, forKey: <span class="string">&quot;looping&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>编译并运行检查动画效果。注意观察方块的变化。</p>
+<center>![Splash Screen Tutorial](https://koenig-media.raywenderlich.com/uploads/2016/05/KnockoutSquare-Animation.gif)</center>
+
+<p>现在将所有的动画组合起来看看效果如何！</p>
+<blockquote>
+<p>注意: 在电脑的GPU完成对iOS设备的模拟任务前，模拟器上的动画可能会有那么一点小抽。如果你的电脑带不动动画，可以试着将模拟器窗口调小或者转到真机开发。</p>
+</blockquote>
+<h2 id="遮罩"><a href="#遮罩" class="headerlink" title="遮罩"></a>遮罩</h2><p>首先，取消<code>init(frame:)</code>方法中对所有添加图层方法的注释，以及<code>startAnimating()</code>方法中对所有动画调用的注释.</p>
+<p>组合好所有动画后，再次编译并运行。</p>
+<center>![PreMask Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/PreMask-Animation.gif)</center>
+
+<p>看上去还是有点怪怪的，是不是？圆形在缩小时，它的边缘会有一个小跳跃。幸运地是, 遮罩动画可以解决该问题，让所有子图动画平滑整齐划一.</p>
+<p>转到｀animateMaskLayer()｀方法并添加如下代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// bounds</span></span><br><span class="line"><span class="keyword">let</span> boundsAnimation = <span class="type">CABasicAnimation</span>(keyPath: <span class="string">&quot;bounds&quot;</span>)</span><br><span class="line">boundsAnimation.fromValue = <span class="type">NSValue</span>(<span class="type">CGRect</span>: <span class="type">CGRect</span>(x: <span class="number">0.0</span>, </span><br><span class="line">y: <span class="number">0.0</span>, </span><br><span class="line">width: radius * <span class="number">2.0</span>, </span><br><span class="line">height: radius * <span class="number">2</span>))</span><br><span class="line">boundsAnimation.toValue = <span class="type">NSValue</span>(<span class="type">CGRect</span>: <span class="type">CGRect</span>(x: <span class="number">0.0</span>, </span><br><span class="line">y: <span class="number">0.0</span>, </span><br><span class="line">width: <span class="number">2.0</span>/<span class="number">3.0</span> * squareLayerLength,</span><br><span class="line">height: <span class="number">2.0</span>/<span class="number">3.0</span> * squareLayerLength))</span><br><span class="line">boundsAnimation.duration = kAnimationDurationDelay</span><br><span class="line">boundsAnimation.beginTime = kAnimationDuration - kAnimationDurationDelay</span><br><span class="line">boundsAnimation.timingFunction = circleLayerTimingFunction</span><br></pre></td></tr></table></figure>
+
+<p>这是一个边界(bounds)动画。记住，由于这是一个应用于所有子图层的遮罩，当边界发生变化时, 整个<strong>AnimatedULogoView</strong>都将消失，直至遮罩被应用到所有子图层。</p>
+<p>现在在添加一个让方块变圆的圆角动画:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// cornerRadius</span></span><br><span class="line"><span class="keyword">let</span> cornerRadiusAnimation = <span class="type">CABasicAnimation</span>(keyPath: <span class="string">&quot;cornerRadius&quot;</span>)</span><br><span class="line">cornerRadiusAnimation.beginTime = kAnimationDuration - kAnimationDurationDelay</span><br><span class="line">cornerRadiusAnimation.duration = kAnimationDurationDelay</span><br><span class="line">cornerRadiusAnimation.fromValue = radius</span><br><span class="line">cornerRadiusAnimation.toValue = <span class="number">2</span></span><br><span class="line">cornerRadiusAnimation.timingFunction = circleLayerTimingFunction</span><br></pre></td></tr></table></figure>
+
+<p>将这两个动画添加到一个<strong>CAAnimationGroup</strong>中，以完成这个图层（的所有动画）：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Group</span></span><br><span class="line"><span class="keyword">let</span> groupAnimation = <span class="type">CAAnimationGroup</span>()</span><br><span class="line">groupAnimation.removedOnCompletion = <span class="literal">false</span></span><br><span class="line">groupAnimation.fillMode = kCAFillModeBoth</span><br><span class="line">groupAnimation.beginTime = beginTime</span><br><span class="line">groupAnimation.repeatCount = <span class="type">Float</span>.infinity</span><br><span class="line">groupAnimation.duration = kAnimationDuration</span><br><span class="line">groupAnimation.animations = [boundsAnimation, cornerRadiusAnimation]</span><br><span class="line">groupAnimation.timeOffset = startTimeOffset</span><br><span class="line">maskLayer.addAnimation(groupAnimation, forKey: <span class="string">&quot;looping&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>编译并运行。</p>
+<center>![RiderIconView Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/RiderIconView-Animation.gif)</center>
+
+<p>看起来好多了！</p>
+<h2 id="网格"><a href="#网格" class="headerlink" title="网格"></a>网格</h2><p>试想一下有一系列以<strong>TileGridView</strong>实例的方式来移动的 _UIView_。 它们看起来会是什么样呢？呃。。。这里就不引用<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%89%B5%EF%BC%9A%E5%85%89%E9%80%9F%E6%88%B0%E8%A8%98">创</a>并展开说明了！（译者：《创》是一部科幻电影。这里翻译的不好，见谅！）</p>
+<p>网格背景由一些列附加到<strong>TileGridView</strong>类的<strong>TileView</strong>组成。为了便于从视觉上理解这个概念, 我们打开<strong>TileView.swift</strong>文件，找到<code>init(frame:)</code>方法，在方法的最后添加如下代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">layer.borderWidth = <span class="number">2.0</span></span><br></pre></td></tr></table></figure>
+
+<p>编译并运行应用。</p>
+<center>![Fuber-Grid-View](https://koenig-media.raywenderlich.com/uploads/2016/05/Fuber-Grid-View-180x320.png)</center>
+
+<p>如果你所见，<strong>TileView</strong>被整齐地排成一张网格。整个创建逻辑都集中在<strong>TileGridView.swift</strong>文件的<code>renderTileViews()</code>方法内。幸运的是，我们所需的布局逻辑（起始工程）已经实现好。接下来要做的就是让它动起来!</p>
+<h2 id="让瓦片视图（TileView）动起来"><a href="#让瓦片视图（TileView）动起来" class="headerlink" title="让瓦片视图（TileView）动起来"></a>让瓦片视图（TileView）动起来</h2><p><strong>TileGridView</strong>仅有一个直接的子视图（subview）<strong>containerView</strong>。它负责添加所有的<strong>TileView</strong>。 此外，还有一个名为<strong>tileViewRows</strong>的属性, 它是一个二维数组，包含所有添加到containerView中的<strong>TileView</strong>。</p>
+<p>回到<strong>TileView</strong>中的<code>init(frame:)</code>方法. 删除我们刚才添加的用于显示边界的代码，并取消向图层中添加<strong>chimeSplashImage</strong>方法的注释。完成后的方法如下:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="keyword">init</span>(frame: <span class="type">CGRect</span>) &#123;</span><br><span class="line"><span class="keyword">super</span>.<span class="keyword">init</span>(frame: frame)</span><br><span class="line">layer.contents = <span class="type">TileView</span>.chimesSplashImage.<span class="type">CGImage</span></span><br><span class="line">layer.shouldRasterize = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译并运行。</p>
+<center>![Grid Starting](https://koenig-media.raywenderlich.com/uploads/2016/05/Grid-Starting.gif)</center>
+
+<p>酷。。。。我们就要大功告成了。</p>
+<p>然而，<strong>TileGridView</strong>（以及它的<strong>TileView</strong>们）还需要添加一些动画效果。打开<strong>TileView.swift</strong>文件，找到<code>startAnimatingWithDuration(_:beginTime:rippleDelay:rippleOffset:)</code> 方法并添加如下动画代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> timingFunction = <span class="type">CAMediaTimingFunction</span>(controlPoints: <span class="number">0.25</span>, <span class="number">0</span>, <span class="number">0.2</span>, <span class="number">1</span>)</span><br><span class="line"><span class="keyword">let</span> linearFunction = <span class="type">CAMediaTimingFunction</span>(name: kCAMediaTimingFunctionLinear)</span><br><span class="line"><span class="keyword">let</span> easeOutFunction = <span class="type">CAMediaTimingFunction</span>(name: kCAMediaTimingFunctionEaseOut)</span><br><span class="line"><span class="keyword">let</span> easeInOutTimingFunction = <span class="type">CAMediaTimingFunction</span>(name: kCAMediaTimingFunctionEaseInEaseOut)</span><br><span class="line"><span class="keyword">let</span> zeroPointValue = <span class="type">NSValue</span>(<span class="type">CGPoint</span>: <span class="type">CGPointZero</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> animations = [<span class="type">CAAnimation</span>]()</span><br></pre></td></tr></table></figure>
+
+<p>这段代码设置了一系列我们即将用到的时间函数。继续添加下面的代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> shouldEnableRipple &#123;</span><br><span class="line"><span class="comment">// Transform.scale</span></span><br><span class="line"><span class="keyword">let</span> scaleAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;transform.scale&quot;</span>)</span><br><span class="line">scaleAnimation.values = [<span class="number">1</span>, <span class="number">1</span>, <span class="number">1.05</span>, <span class="number">1</span>, <span class="number">1</span>]</span><br><span class="line">scaleAnimation.keyTimes = <span class="type">TileView</span>.rippleAnimationKeyTimes</span><br><span class="line">scaleAnimation.timingFunctions = [linearFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">linearFunction]</span><br><span class="line">scaleAnimation.beginTime = <span class="number">0.0</span></span><br><span class="line">scaleAnimation.duration = duration</span><br><span class="line">animations.append(scaleAnimation)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Position</span></span><br><span class="line"><span class="keyword">let</span> positionAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;position&quot;</span>)</span><br><span class="line">positionAnimation.duration = duration</span><br><span class="line">positionAnimation.timingFunctions = [linearFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">linearFunction]</span><br><span class="line">positionAnimation.keyTimes = <span class="type">TileView</span>.rippleAnimationKeyTimes</span><br><span class="line">positionAnimation.values = [zeroPointValue, </span><br><span class="line">zeroPointValue, </span><br><span class="line"><span class="type">NSValue</span>(<span class="type">CGPoint</span>:rippleOffset), </span><br><span class="line">zeroPointValue, </span><br><span class="line">zeroPointValue]</span><br><span class="line">positionAnimation.additive = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">animations.append(positionAnimation)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>shouldEnableRipple</strong>是个布尔值，用于控制何时将形变动画和位置动画添加到我们刚刚创建的数组中。在通过<code>renderTileViews()</code>方法创建时，所有未处在<strong>TileGridView</strong>外围边缘的<strong>TileView</strong>，就已将<strong>shouldEnableRipple</strong>设为<strong>true</strong>。</p>
+<p>添加一个不透明动画:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Opacity</span></span><br><span class="line"><span class="keyword">let</span> opacityAnimation = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;opacity&quot;</span>)</span><br><span class="line">opacityAnimation.duration = duration</span><br><span class="line">opacityAnimation.timingFunctions = [easeInOutTimingFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">timingFunction, </span><br><span class="line">easeOutFunction, </span><br><span class="line">linearFunction]</span><br><span class="line">opacityAnimation.keyTimes = [<span class="number">0.0</span>, <span class="number">0.61</span>, <span class="number">0.7</span>, <span class="number">0.767</span>, <span class="number">0.95</span>, <span class="number">1.0</span>]</span><br><span class="line">opacityAnimation.values = [<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.45</span>, <span class="number">0.6</span>, <span class="number">0.0</span>, <span class="number">0.0</span>]</span><br><span class="line">animations.append(opacityAnimation)</span><br></pre></td></tr></table></figure>
+
+<p>该动画简单明了，只是设置了一些非常特殊的的<strong>keyTimes</strong>。</p>
+<p>现在将这些动画添加到一个动画组中:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Group</span></span><br><span class="line"><span class="keyword">let</span> groupAnimation = <span class="type">CAAnimationGroup</span>()</span><br><span class="line">groupAnimation.repeatCount = <span class="type">Float</span>.infinity</span><br><span class="line">groupAnimation.fillMode = kCAFillModeBackwards</span><br><span class="line">groupAnimation.duration = duration</span><br><span class="line">groupAnimation.beginTime = beginTime + rippleDelay</span><br><span class="line">groupAnimation.removedOnCompletion = <span class="literal">false</span></span><br><span class="line">groupAnimation.animations = animations</span><br><span class="line">groupAnimation.timeOffset = kAnimationTimeOffset</span><br><span class="line"></span><br><span class="line">layer.addAnimation(groupAnimation, forKey: <span class="string">&quot;ripple&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这会将<strong>groupAnimation</strong>添加到<strong>TileView</strong>实例上。注意，动画组会因<strong>shouldEnableRipple</strong>值的不同而可能包含一个或三个动画。</p>
+<p>现在我们已经为每一个<strong>TileView</strong>实现了动画, 接下来需要在<strong>TileGridView</strong>中去调用它们。打开<strong>TileGridView.swift</strong>文件将以下代码添加到<code>startAnimatingWithBeginTime(_:)</code>方法中:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">func</span> <span class="title">startAnimatingWithBeginTime</span><span class="params">(beginTime: NSTimeInterval)</span></span> &#123;</span><br><span class="line"><span class="keyword">for</span> tileRows <span class="keyword">in</span> tileViewRows &#123;</span><br><span class="line"><span class="keyword">for</span> view <span class="keyword">in</span> tileRows &#123;</span><br><span class="line">view.startAnimatingWithDuration(kAnimationDuration, beginTime: beginTime, </span><br><span class="line">rippleDelay: <span class="number">0</span>, </span><br><span class="line">rippleOffset: <span class="type">CGPointZero</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译并运行。</p>
+<center>![Grid-1](https://koenig-media.raywenderlich.com/uploads/2016/05/Grid-1.gif)</center>
+
+<p>嗯。。。看上去已经好多了，但<strong>AnimatedULogoView</strong>的跳动应该通过<strong>TileView</strong>向外产生一个类似水波的涟漪效果。这就意味还需要创建一个，基于从中央视图（view）到外围视图之间距离的，用于与一个常数相乘的延迟系数。</p>
+<p>紧挨着<code>startAnimatingWithBeginTime(_:)</code>函数下面, 添加如下的一个新函数:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">func</span> <span class="title">distanceFromCenterViewWithView</span><span class="params">(view: UIView)</span></span>-&gt;<span class="type">CGFloat</span> &#123;</span><br><span class="line"><span class="keyword">guard</span> <span class="keyword">let</span> centerTileView = centerTileView <span class="keyword">else</span> &#123; <span class="keyword">return</span> <span class="number">0.0</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> normalizedX = (view.center.x - centerTileView.center.x)</span><br><span class="line"><span class="keyword">let</span> normalizedY = (view.center.y - centerTileView.center.y)</span><br><span class="line"><span class="keyword">return</span> sqrt(normalizedX * normalizedX + normalizedY * normalizedY)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该方法可以便捷地获取到，指定视图与位于中心的视图，两个视图（_TileView_）中心点之间的距离。</p>
+<p>回到<code>startAnimatingWithBeginTime(_:)</code>函数，将其内容替换为如下代码:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> tileRows <span class="keyword">in</span> tileViewRows &#123;</span><br><span class="line"><span class="keyword">for</span> view <span class="keyword">in</span> tileRows &#123;</span><br><span class="line"><span class="keyword">let</span> <span class="built_in">distance</span> = <span class="keyword">self</span>.distanceFromCenterViewWithView(view)</span><br><span class="line"></span><br><span class="line">view.startAnimatingWithDuration(kAnimationDuration, beginTime: beginTime, rippleDelay: kRippleDelayMultiplier * <span class="type">NSTimeInterval</span>(<span class="built_in">distance</span>), rippleOffset: <span class="type">CGPointZero</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里通过刚刚添加的<code>distanceFromCenterViewWithView(_:)</code>函数，来计算（每个子视图）动画的延迟启动时间。</p>
+<p>编译运行.</p>
+<center>![Grid-2](https://koenig-media.raywenderlich.com/uploads/2016/05/Grid-2.gif)</center>
+
+<p>好多了! 动画现在看上去已经有模有样了, 但还是少点什么。<strong>TileView</strong>应该像水波一样，向四周逐渐扩散开来。</p>
+<p>解决该问的最好方法就是拿出自己的高中数学知识，然后根据<strong>Tileview</strong>与中心点间距离来得到一个量化的顶点。</p>
+<p>在<code>distanceFromCenterViewWithView(_:)</code>函数下面再添加一个函数:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">func</span> <span class="title">normalizedVectorFromCenterViewToView</span><span class="params">(view: UIView)</span></span>-&gt;<span class="type">CGPoint</span> &#123;</span><br><span class="line"><span class="keyword">let</span> length = <span class="keyword">self</span>.distanceFromCenterViewWithView(view)</span><br><span class="line"><span class="keyword">guard</span> <span class="keyword">let</span> centerTileView = centerTileView <span class="keyword">where</span> length != <span class="number">0</span> <span class="keyword">else</span> &#123; <span class="keyword">return</span> <span class="type">CGPointZero</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> deltaX = view.center.x - centerTileView.center.x</span><br><span class="line"><span class="keyword">let</span> deltaY = view.center.y - centerTileView.center.y</span><br><span class="line"><span class="keyword">return</span> <span class="type">CGPoint</span>(x: deltaX / length, y: deltaY / length)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>回到<code>startAnimatingWithBeginTime(_:)</code>方法，将代码修改如下:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">func</span> <span class="title">startAnimatingWithBeginTime</span><span class="params">(beginTime: NSTimeInterval)</span></span> &#123;</span><br><span class="line"><span class="keyword">for</span> tileRows <span class="keyword">in</span> tileViewRows &#123;</span><br><span class="line"><span class="keyword">for</span> view <span class="keyword">in</span> tileRows &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="built_in">distance</span> = <span class="keyword">self</span>.distanceFromCenterViewWithView(view)</span><br><span class="line"><span class="keyword">var</span> vector = <span class="keyword">self</span>.normalizedVectorFromCenterViewToView(view)</span><br><span class="line"></span><br><span class="line">vector = <span class="type">CGPoint</span>(x: vector.x * kRippleMagnitudeMultiplier * <span class="built_in">distance</span>, </span><br><span class="line">y: vector.y * kRippleMagnitudeMultiplier * <span class="built_in">distance</span>)</span><br><span class="line"></span><br><span class="line">view.startAnimatingWithDuration(kAnimationDuration, </span><br><span class="line">beginTime: beginTime, </span><br><span class="line">rippleDelay: kRippleDelayMultiplier * <span class="type">NSTimeInterval</span>(<span class="built_in">distance</span>), </span><br><span class="line">rippleOffset: vector)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这会通过 <em>rippleOffset</em> 计算位于每个顶点（vector）的 <em>TileView</em> 的偏移量。</p>
+<p>编译运行一下.</p>
+<center>![Grid-3](https://koenig-media.raywenderlich.com/uploads/2016/05/Grid-3.gif)</center>
+
+<p>太棒了! 接下来是点睛之笔：添加一个放大的效果，这个放大的动画效果要刚好在遮罩边界（bounds）发生改变之前。</p>
+<p>在<code>startAnimatingWithBeginTime(_:)</code>函数的开始位置，添加如下代码：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> linearTimingFunction = <span class="type">CAMediaTimingFunction</span>(name: kCAMediaTimingFunctionLinear)</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> keyframe = <span class="type">CAKeyframeAnimation</span>(keyPath: <span class="string">&quot;transform.scale&quot;</span>)</span><br><span class="line">keyframe.timingFunctions = [linearTimingFunction, </span><br><span class="line"><span class="type">CAMediaTimingFunction</span>(controlPoints: <span class="number">0.6</span>, <span class="number">0.0</span>, <span class="number">0.15</span>, <span class="number">1.0</span>), </span><br><span class="line">linearTimingFunction]</span><br><span class="line">keyframe.repeatCount = <span class="type">Float</span>.infinity;</span><br><span class="line">keyframe.duration = kAnimationDuration</span><br><span class="line">keyframe.removedOnCompletion = <span class="literal">false</span></span><br><span class="line">keyframe.keyTimes = [<span class="number">0.0</span>, <span class="number">0.45</span>, <span class="number">0.887</span>, <span class="number">1.0</span>]</span><br><span class="line">keyframe.values = [<span class="number">0.75</span>, <span class="number">0.75</span>, <span class="number">1.0</span>, <span class="number">1.0</span>]</span><br><span class="line">keyframe.beginTime = beginTime</span><br><span class="line">keyframe.timeOffset = kAnimationTimeOffset</span><br><span class="line"></span><br><span class="line">containerView.layer.addAnimation(keyframe, forKey: <span class="string">&quot;scale&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>再次编译并运行。</p>
+<center>![FuberFinal](https://koenig-media.raywenderlich.com/uploads/2016/05/FuberFinal.gif)</center>
+
+<p>漂亮，我们已经创建了一个产品级的动画效果，会有大一批的Fuber用户在微博（Twitter）上为此点赞的！：］（作者又卖了个萌！）</p>
+<blockquote>
+<p>注意：试着改变<strong>kRippleMagnitudeMultiplier</strong>和<strong>kRippleDelayMultiplier</strong>的值，看看会有什么有趣的事发生。</p>
+</blockquote>
+<p>接下收尾，在<strong>RootContainerViewController.swift</strong>文件中，将<code>viewDidLoad()</code>最后一行代码<code>showSplashViewControllerNoPing()</code>改为<code>showSplashViewController()</code>。</p>
+<p>最后在编译运行一次，欣赏下自己的工作成果吧</p>
+<center>![Fuber Animation](https://koenig-media.raywenderlich.com/uploads/2016/05/Fuber-Animation.gif)</center>
+
+<p>给自己点个赞吧，这是一个非常炫酷的溅落式启动页。</p>
+<h2 id="接下来"><a href="#接下来" class="headerlink" title="接下来"></a>接下来</h2><p>可以在这下载到<a target="_blank" rel="noopener" href="https://cdn1.raywenderlich.com/wp-content/uploads/2016/06/Fuber-final.zip">最终的Fuber工程</a>.</p>
+<p>您还可以在这里找到由译者更新至Swift 3.0的<a target="_blank" rel="noopener" href="https://github.com/Dracarys/Fuber-final">最终的Fuber工程</a>，请使用Xcode 8.0 beta4 或更新版本打开。</p>
+<p>如果想了解更多关于动画的知识，请访问这里的<a target="_blank" rel="noopener" href="https://www.raywenderlich.com/store/ios-animations-by-tutorials">iOS动画教程</a>.</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>本文翻译自 <a target="_blank" rel="noopener" href="https://www.raywenderlich.com/133224/how-to-create-an-uber-splash-screen">How To Create an Uber Splash Screen</a>*， *由 <a target="_blank" rel="noopener" href="https://www.raywenderlich.com/u/lolgrep">Derek Selander</a> 发表于Raywenderlich。</p>
+<p>受限于译者英语水平及翻译经验，译文难免有词不达意，甚至错误的地方，还望不吝赐教，予以指正</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2016/08/02/How-to-create-an-Uber-splash-screen/" title="【译】高仿Uber启动页">https://dracarys.github.io/2016/08/02/How-to-create-an-Uber-splash-screen/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Swift/" rel="tag"><i class="fa fa-tag"></i> Swift</a>
+              <a href="/tags/iOS/" rel="tag"><i class="fa fa-tag"></i> iOS</a>
+              <a href="/tags/Animation/" rel="tag"><i class="fa fa-tag"></i> Animation</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/07/28/Interactive-with-C-APIs-Swift-3-beta/" rel="prev" title="【译】Swift 与 C API的交互（Swift 3）">
+                  <i class="fa fa-chevron-left"></i> 【译】Swift 与 C API的交互（Swift 3）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2016/08/05/How-to-cross-compiled-osip2-and-eXosip2-with-Mac/" rel="next" title="在Mac上为iOS交叉编译osip2和eXosip2">
+                  在Mac上为iOS交叉编译osip2和eXosip2 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : '70a7f639039b293b0cd6d41aa415390d',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

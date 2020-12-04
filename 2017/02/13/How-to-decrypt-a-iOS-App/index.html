@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="作为一个iOS开发者，经常会看到别人的应用多么多么炫酷，想学习学习吧，它又不是开源的，怎么办呢？只能自己掰开内部瞧一瞧。说是瞧瞧，可真正要打开就没那么简单了，从Appstore下载的App都是经过Apple加密的，也就是俗称的“加壳”，而我们要想一窥究竟，面临的第一个障碍就是，如何去掉这层壳。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS应用砸壳">
+<meta property="og:url" content="https://dracarys.github.io/2017/02/13/How-to-decrypt-a-iOS-App/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="作为一个iOS开发者，经常会看到别人的应用多么多么炫酷，想学习学习吧，它又不是开源的，怎么办呢？只能自己掰开内部瞧一瞧。说是瞧瞧，可真正要打开就没那么简单了，从Appstore下载的App都是经过Apple加密的，也就是俗称的“加壳”，而我们要想一窥究竟，面临的第一个障碍就是，如何去掉这层壳。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dracarys.github.io/images/pipixia.png">
+<meta property="article:published_time" content="2017-02-13T14:38:56.000Z">
+<meta property="article:modified_time" content="2020-12-04T01:00:58.532Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="iOS逆向">
+<meta property="article:tag" content="砸壳">
+<meta property="article:tag" content="反编译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dracarys.github.io/images/pipixia.png">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2017/02/13/How-to-decrypt-a-iOS-App/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>iOS应用砸壳 | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A0%B8%E5%A3%B3%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">砸壳流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B"><span class="nav-number">3.</span> <span class="nav-text">开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">导出头文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">5.</span> <span class="nav-text">后记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2017/02/13/How-to-decrypt-a-iOS-App/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          iOS应用砸壳
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-02-13 22:38:56" itemprop="dateCreated datePublished" datetime="2017-02-13T22:38:56+08:00">2017-02-13</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-12-04 09:00:58" itemprop="dateModified" datetime="2020-12-04T09:00:58+08:00">2020-12-04</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/iOS%E9%80%86%E5%90%91/" itemprop="url" rel="index"><span itemprop="name">iOS逆向</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作为一个iOS开发者，经常会看到别人的应用多么多么炫酷，想学习学习吧，它又不是开源的，怎么办呢？只能自己掰开内部瞧一瞧。说是瞧瞧，可真正要打开就没那么简单了，从Appstore下载的App都是经过Apple加密的，也就是俗称的“加壳”，而我们要想一窥究竟，面临的第一个障碍就是，如何去掉这层壳。 </p>
+<a id="more"></a>
+
+<p><img src="/../images/pipixia.png" alt="皮皮虾"></p>
+<center>皮皮虾我们去“砸壳”！</center>
+
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>正所谓工欲善其事，必先利其器。没有工具是万万不行的，下面列出了这次“砸壳”过程中所涉及的工具：</p>
+<ol>
+<li><p>一部运行 Linux，或者 macOS 的电脑；</p>
+</li>
+<li><p>一部已经越狱的 iOS 设备，并且以安装OpenSSH（在Cydia首页有详细的教程，此处不再赘述），Cycript，avd-cmds；</p>
+</li>
+<li><p>下载主角：<a target="_blank" rel="noopener" href="https://github.com/stefanesser/dumpdecrypted">dumpdecrypted</a> ，并按照Github上的说明进行编译，得到“dumpdecrypted.dylib”。</p>
+</li>
+</ol>
+<p>至此所有工具准备就绪，后面会逐步用到它们。</p>
+<h2 id="砸壳流程"><a href="#砸壳流程" class="headerlink" title="砸壳流程"></a>砸壳流程</h2><p>坚固的堡垒往往容易从内部被攻破，这里也正是利用了这点，将我们得到 dumpdecrypted.dylib 放置到需要砸壳的应用的 Documents 目录下，然后运行从“内部”将其攻破。</p>
+<p>要实现这一点，我们就要先找到 Documents 目录，然后从桌面端将 dumpdecrypted.dylib 拷贝到手机上，之后在运行之。得到破壳的应用文件后，在从手机端拷贝回桌面端，以供学习研究。</p>
+<h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><p>要找到手机上某个应用对应的 Documents 目录，需要先将桌面端与手机端连接起来，你可以通过iExplorer、iTools、iFunBox 等可视化工具操作，也可以直接通过命令行操作，我们这里推荐采用命令行的模式，为什么？因为哪些图形化的工具都要收费，再者命令行操作看上去更酷一些不是吗。</p>
+<p>是时候请出我们之前准备的OpenSSH了，如果你很感兴趣，可以在这里了解更多关于OpenSSH的内容。首先在检查你的桌面端和手机端是不是在同一网段，例如：这里我的 Mac IP 是192.168.0.109，手机 IP 是192.168.0.129。确定后打开终端（Terminal），输入如下命令并执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh root@192.168.0.129</span><br></pre></td></tr></table></figure>
+<p>执行后会要求你输入登录密码，注意如果你在手机上安装 OpenSSH 时修改过密码，那么这里请输入新密码，如果没有，那么默认的密码是：“alpine”。<br>输入密码后后就远程登录到了手机端，很酷是不是？</p>
+<p>登录之后要做什么呢？当然是找“堡垒”的位置，以便安插我们的“间谍”–dumpdecrypted.dylib啊，可目录众多怎么找呢？别慌，有办法。首先打开那个我们要借鉴学习的应用，然后把它应用全部关闭，保证只有我们选中的那个应用处于活动状态（在后台也可以。</p>
+<p>接下来在终端中输入如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -e | grep var</span><br></pre></td></tr></table></figure>
+<p>之后可以在终端上看到：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">127 ??         0:00.89 /usr/libexec/pkd -d/var/db/PlugInKit-Annotations</span><br><span class="line">1270 ??         0:00.23 /private/var/db/stash/_.r4WV27/Applications/MobileSafari.app/webbookmarksd</span><br><span class="line">1545 ??         0:05.46 /var/mobile/Containers/Bundle/Application/58E4482C-E4C1-413C-85C5-BBE9AE34E5A1/target.app/target</span><br><span class="line">1598 ttys000    0:00.01 grep var</span><br></pre></td></tr></table></figure>
+
+<p>这里的 “target” 就是我们要学习研究的应用。注意这里如果提示不识别 ps 命令，请重新安装 avd-cmds 工具。</p>
+<p>接下来就要祭出大杀器 Cycript 的时候了，在终端输入：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cycript -p /var/mobile/Containers/Bundle/Application/58E4482C-E4C1-413C-85C5-BBE9AE34E5A1/target.app/target</span><br></pre></td></tr></table></figure>
+
+<p>执行后如果出现 <code>cy#</code> 提示符，就说明我们已经成功进入 Cycript 命令操作状态，Cycript可以做的事情很多，感兴趣的可以参考这篇<a target="_blank" rel="noopener" href="http://www.liuchendi.com/2015/12/19/iOS/23_Cycrip/">文章</a>。</p>
+<p>接下来在终端输入如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0]</span><br></pre></td></tr></table></figure>
+<p>如果你熟悉 iOS 开发，是不是感觉很眼熟，这不就是我们平时获取 Documents 目录的方法吗，是的。这也正是 Cycript 的魅力。<br>输入命令后就会显示出对应的Documents目录了，记下目录，按 <code>Control+D</code> 退出Cycipt。</p>
+<p>既然已经准确地定位到 Documents (堡垒)目录，那么接下来就是放“间谍”进去啦。</p>
+<p>这里你可以通过之前介绍的几个图形化工具，将 dumpdecrypted.dylib 直接拷贝进去，也可以像我一样用命令操作。<br>退出SSH连接，怎么退？<code>logout</code> 啊。在终端上进入我们之前准备好的dumpdecrypted.dylib 所在目录。然后在终端上输入如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp dumpdecrypted.dylib root@192.168.0.129:/var/mobile/Containers/Data/Application/9C376783-E2FA-4B5C-8167-538D5C2FE31A/Documents/</span><br></pre></td></tr></table></figure>
+<p>执行后，会要求你输入密码，输入正确的密码后，即开始向目标目录拷贝。这里你可以看到拷贝的进度。</p>
+<p>拷贝完成后，我们再次通过 SSH 连接到手机端，进入目标应用的 Documents 目录，先 <code>ls</code>一下看看我们的文件是否拷贝正确。没问题，就在终端中输入如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DYLD_INSERT_LIBRARIES=dumpdecrypted.dylib /var/mobile/Containers/Bundle/Application/58E4482C-E4C1-413C-85C5-BBE9AE34E5A1/target.app/target</span><br></pre></td></tr></table></figure>
+<p>注意上面的路径，要正确，是待砸壳 App 所在路径，不是 Documents 的路径。</p>
+<p>执行完毕后，我们在 <code>ls</code> 一下，看看是不是多了一个XXX.decrypted的文件，有就说明砸壳成功啦。</p>
+<p>接下来就是怎么把它拷贝到我们的电脑上，以便研究学习了。怎么办呢，还是通过scp命令。</p>
+<p>退出SSH连接，回到我们的桌面系统，在终端上输入如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp root@192.168.0.129:/var/mobile/Containers/Data/Application/9C376783-E2FA-4B5C-8167-538D5C2FE31A/Documents/wifikey.decrypted /Users/hahaha/Documents/cracktools/</span><br></pre></td></tr></table></figure>
+<p>同样，在拷贝进度完成后，我们就可以在 <code>Users/hahaha/Documents/cracktools</code>目录下找到我们的 “target.decrypted” 文件了。至此砸壳全部完成。</p>
+<h2 id="导出头文件"><a href="#导出头文件" class="headerlink" title="导出头文件"></a>导出头文件</h2><p>仅仅止步于砸壳是没有意义的，重点是我们要学习它内部是怎么组织的，那么如果能看到目标应用的所有头文件是不是很有帮助呢，答案自然不言而喻。接下来就从我们刚刚砸完壳的文件中把头文件导出来。</p>
+<p>这里就用到 class-dump 这件法宝了， <a target="_blank" rel="noopener" href="https://github.com/nygard/class-dump">github地址</a></p>
+<p>在终端上进入 target.decrypted 所在目录，例如我这里是Users/hahaha/Documents/cracktools/，然后在终端上执行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class-dump -H wifikey.decrypted -o outputHeaders</span><br></pre></td></tr></table></figure>
+<p>如果提示找不到class-dump命令，请检查是否拷贝到了 <code>/usr/local/bin</code>目录。</p>
+<p>进入 outputHeaders 看看，如果你和我一样，用的是越狱 iPhone 4s，那么将会是空的，这是因为我们没有指定正确的指令集。下面是iOS对应的指令集：</p>
+<table>
+<thead>
+<tr>
+<th align="center">指令集</th>
+<th align="center">设备</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">armv6</td>
+<td align="center">iPhone, iPhone2, iPhone3G, 第一代、第二代 iPod Touch</td>
+</tr>
+<tr>
+<td align="center">armv7</td>
+<td align="center">iPhone3GS, iPhone4, iPhone4S, iPad, iPad2, iPad3(The New iPad), iPad mini, iPod Touch 3G, iPod Touch4</td>
+</tr>
+<tr>
+<td align="center">armv7s</td>
+<td align="center">iPhone5, iPhone5C, iPad4(iPad with Retina Display)</td>
+</tr>
+<tr>
+<td align="center">arm64</td>
+<td align="center">iPhone5S, iPad Air, iPad mini2(iPad mini with Retina Display)</td>
+</tr>
+</tbody></table>
+<p>接下来我们通过指定指定指令集在试一次：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class-dump --arch armv7 -H wifikey.decrypted -o outputHeaders</span><br></pre></td></tr></table></figure>
+<p>看看 outputHeaders 文件夹，嗯，所有的 头文件都被dump出来了。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>其实iOS砸壳的教程已经很多了，但是今天本人实际操作下来，还是不是很顺利，不过好在最后尝试成功了。为了避免后人像我一样浪费时间，还是再写一篇的好。当然了，也不排除是本人自己笨，理解能力不强。不管怎么样，就算是重复，至少也能增强自己的记忆不是吗。这就够了。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="http://www.liuchendi.com/2015/12/23/iOS/24_dumpdecrypted/">《iOS逆向 - dumpdecrypted工具砸壳》by 小木头</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.liuchendi.com/2015/12/19/iOS/23_Cycrip/">《iOS逆向 - Cycript基本用法》 by 小木头</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.jianshu.com/p/47836c78eb0a">《iOS逆向之App脱壳》 by 龙马君</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.cnblogs.com/ludashi/p/5725743.html">《iOS逆向工程之App脱壳》 by 青玉伏案</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2017/02/13/How-to-decrypt-a-iOS-App/" title="iOS应用砸壳">https://dracarys.github.io/2017/02/13/How-to-decrypt-a-iOS-App/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/iOS%E9%80%86%E5%90%91/" rel="tag"><i class="fa fa-tag"></i> iOS逆向</a>
+              <a href="/tags/%E7%A0%B8%E5%A3%B3/" rel="tag"><i class="fa fa-tag"></i> 砸壳</a>
+              <a href="/tags/%E5%8F%8D%E7%BC%96%E8%AF%91/" rel="tag"><i class="fa fa-tag"></i> 反编译</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2017/02/10/Swift-Tips-Part-I/" rel="prev" title="Swift Tips Part I">
+                  <i class="fa fa-chevron-left"></i> Swift Tips Part I
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2017/03/28/How-to-change-your-Icon-in-code/" rel="next" title="iOS:通过代码更新应用图标">
+                  iOS:通过代码更新应用图标 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : '3a69dce874209c911c00b88a9a1cafb1',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
