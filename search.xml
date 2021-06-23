@@ -263,6 +263,9 @@ b
 <p><em>由 Matthijs Hollemans 为 Swift 算法合集撰写</em></p>
 <p><em>由 William Han 翻译</em></p>
 ]]></content>
+      <categories>
+        <category>Algorithm club</category>
+      </categories>
       <tags>
         <tag>Swift</tag>
         <tag>Data Structures</tag>
@@ -355,6 +358,9 @@ b
 <p><em>由 Matthijs Hollemans 为 Swift Algorithm Club（Swift算法社区） 撰写</em></p>
 <p><em>由 William Han  翻译并发表于 Github</em></p>
 ]]></content>
+      <categories>
+        <category>Algorithm club</category>
+      </categories>
       <tags>
         <tag>Swift</tag>
         <tag>Data Structures</tag>
@@ -3194,10 +3200,13 @@ Swift 引入的 C 枚举，在构造时即使入参与声明不一致，也不�
 <h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>这个问题其实自己遇到很多次了，但总是看完之后，过后一段时间不用就又忘了。此外，国内中文环境越来越差，稍微有点价值的内容都被各个平台封闭在自己圈中，要不就是SEO污染，想通过搜索引擎检索到有意义的内容越来越难了。这也算是略近绵薄之力吧。</p>
 <h2 id="参见"><a href="#参见" class="headerlink" title="参见"></a>参见</h2><p><a href="https://developer.apple.com/library/archive/qa/qa1490/_index.html#//apple_ref/doc/uid/DTS10004097">Building Objective-C static libraries with categories</a><br><a href="https://stackoverflow.com/questions/14497872/other-linker-flags-list">Other linker flags list</a></p>
 ]]></content>
+      <categories>
+        <category>编译工具</category>
+      </categories>
       <tags>
         <tag>Objective-C</tag>
-        <tag>连接器</tag>
         <tag>编译</tag>
+        <tag>链接</tag>
       </tags>
   </entry>
 </search>
