@@ -3169,4 +3169,35 @@ Swift 引入的 C 枚举，在构造时即使入参与声明不一致，也不�
         <tag>混编</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Other linker flags</title>
+    <url>/2021/06/23/Other-linker-flags/</url>
+    <content><![CDATA[<p>CocoPod 是一个了不起的工具，很多团队也都通过它实现了项目的组件化。但在使用过程中不知道你是否也遇到过链接错误的问题。通常这都是因为 CocoaPod 在生成项目时自动在 Other Linker Flags 中添加  <code>-ObjC</code> 引起，那么  <code>-ObjC</code> 这个参数具体是做什么的呢，还有哪些参数呢？</p>
+<a id="more"></a>
+
+<h2 id="ObjC-的意义"><a href="#ObjC-的意义" class="headerlink" title="-ObjC 的意义"></a>-ObjC 的意义</h2><p><code>-ObjC</code> 参数的意义是告诉链接器，将静态库中所有实现了 Objective-C 或 Category 的成员（目标文件），链接到最终的可执行文件中。那这又是为什么呢？为什么需要给这么一个选项呢？在解决这个问题之前，先来回顾一下有关链接的知识。</p>
+<h2 id="静态语言的链接"><a href="#静态语言的链接" class="headerlink" title="静态语言的链接"></a>静态语言的链接</h2><p>像 C 这样的典型静态语言，所有“源文件”都会被编译为包含着可执行函数和静态数据的“目标文件”，之后在由“链接器”负责，将这些目标文件整合为一个可执行文件。</p>
+<p>通常来说我们的工程中源文件不会只有一个，而且各个源文件之间还可能存在引用关系。例如： <code>A.c</code> 中用到了 <code>B.c</code> 中的一个名为 <code>doSomething()</code> 的函数。当编译器遇到这个函数时，它会将一个 “undefined symbol” 写入到生成的目标文件中，表示这个位置“缺少东西”。之后，当链接器遇到这个标记时，它就会知道这里有空缺需要填补。随着连接器的深入，它在<code>B.o</code> 中找到了<code>doSomething()</code> 的实现，这时它就会用这个实现的地址将 <code>A.o</code> 中的 “undefined symbol” 替换掉，从而将 <code>A.o</code> <code>B.o</code> 链接在一起。</p>
+<p>UNIX 静态库是一个目标文件的集合，只有那些可以填补“undefined symbol”（空缺）的目标文件才会被整合到最终的可执行文件中，这样做也是为了减少最终可执行文件的体积。</p>
+<h2 id="动态语言的链接"><a href="#动态语言的链接" class="headerlink" title="动态语言的链接"></a>动态语言的链接</h2><p>在当下面试都要手撕“Runtime”的时代，大家对于 Objective-C 是一门动态语言，一定不会感到陌生。那么它跟 静态语言有什么不同呢，其中一个最大的区别就是：直到方法被调用，否则在此之前无从得知这个方法的实现具体在什么位置。因此，Objective-C 的编译器也就没必要为方法设置“链接标识”了，但是类的链接标识依然存在。</p>
+<p>举例来说，假设在源文件 <code>A.m</code> 有这样一条语句 <code>[b doSomething]</code> ，那么经过编译后，<code>A.o</code> 中会有一个用来指示“ <code>b</code> 空缺”的“undefined symbol”，但方法 <code>doSomething</code> 的“undefined symbol”却不会有。</p>
+<h2 id="Other-linker-flags"><a href="#Other-linker-flags" class="headerlink" title="Other linker flags"></a>Other linker flags</h2><p>Objective-C 这种动态语言特性为我们带来了很多便利，但也存在一些弊端。例如，当我们的静态库中包含 category 时。根据前面介绍的动态语言链接特性，不难看出，category 的目标文件将不会被链接到可执行文件中，因为其它目标文件中都没有需要链接到位于 category 中的方法的“undefined symbol”。这样生成的可执行文件，在运行时就可能会出现 “selector not recognized” 的异常。</p>
+<p>综上，我们也就不难理解 <code>-ObjC</code> 的意义了。那除此之外还有没有其它标识呢？</p>
+<h2 id="Linker-flags-list"><a href="#Linker-flags-list" class="headerlink" title="Linker flags list"></a>Linker flags list</h2><p>答案是肯定的。因为我们只能让链接器覆盖大部分情况，一些边边角角的问题，还是需要人为干预。怎么干预呢，正是通过下面这些标识：</p>
+<ul>
+<li>-all_load ： 加载静态库中所有成员（简单暴力，但通常代价也不小）</li>
+<li>-force_load &lt;路径参数&gt; : 加载指定路径静态库中的所有成员（这样目标就明确多了）</li>
+<li>-arch &lt;架构名&gt;：加载指定架构的目标文件，例如：armv7，arm64，i386。</li>
+<li>-framework &lt;name[, suffix]&gt;：为链接器指定 “name.framework/name”的framework检索地址。如果指定了后缀，那么将优先检索。例如：“name.framework/name_suffix”.</li>
+</ul>
+<p>这里仅列举了部分常见的，欲了解更多，请在终端中输入 <code>man ld</code> 查阅 manpage。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>这个问题其实自己遇到很多次了，但总是看完之后，过后一段时间不用就又忘了。此外，国内中文环境越来越差，稍微有点价值的内容都被各个平台封闭在自己圈中，要不就是SEO污染，想通过搜索引擎检索到有意义的内容越来越难了。这也算是略近绵薄之力吧。</p>
+<h2 id="参见"><a href="#参见" class="headerlink" title="参见"></a>参见</h2><p><a href="https://developer.apple.com/library/archive/qa/qa1490/_index.html#//apple_ref/doc/uid/DTS10004097">Building Objective-C static libraries with categories</a><br><a href="https://stackoverflow.com/questions/14497872/other-linker-flags-list">Other linker flags list</a></p>
+]]></content>
+      <tags>
+        <tag>Objective-C</tag>
+        <tag>连接器</tag>
+        <tag>编译</tag>
+      </tags>
+  </entry>
 </search>

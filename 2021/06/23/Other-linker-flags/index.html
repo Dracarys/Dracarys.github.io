@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/ffavicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dracarys.github.io","root":"/","images":"/images","scheme":"Mist","version":"8.1.0","exturl":false,"sidebar":{"position":"right","display":"hide","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
+  </script>
+<meta name="description" content="CocoPod 是一个了不起的工具，很多团队也都通过它实现了项目的组件化。但在使用过程中不知道你是否也遇到过链接错误的问题。通常这都是因为 CocoaPod 在生成项目时自动在 Other Linker Flags 中添加  -ObjC 引起，那么  -ObjC 这个参数具体是做什么的呢，还有哪些参数呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Other linker flags">
+<meta property="og:url" content="https://dracarys.github.io/2021/06/23/Other-linker-flags/index.html">
+<meta property="og:site_name" content="土丘上的蒲公英">
+<meta property="og:description" content="CocoPod 是一个了不起的工具，很多团队也都通过它实现了项目的组件化。但在使用过程中不知道你是否也遇到过链接错误的问题。通常这都是因为 CocoaPod 在生成项目时自动在 Other Linker Flags 中添加  -ObjC 引起，那么  -ObjC 这个参数具体是做什么的呢，还有哪些参数呢？">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-23T06:03:29.000Z">
+<meta property="article:modified_time" content="2021-06-23T09:12:27.400Z">
+<meta property="article:author" content="William">
+<meta property="article:tag" content="Objective-C">
+<meta property="article:tag" content="连接器">
+<meta property="article:tag" content="编译">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://dracarys.github.io/2021/06/23/Other-linker-flags/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<title>Other linker flags | 土丘上的蒲公英</title>
+  
+    <script>
+      function sendPageView() {
+        if (CONFIG.hostname !== location.hostname) return;
+        var uid = localStorage.getItem('uid') || (Math.random() + '.' + Math.random());
+        localStorage.setItem('uid', uid);
+        navigator.sendBeacon('https://www.google-analytics.com/collect', new URLSearchParams({
+          v  : 1,
+          tid: 'UA-91850054-1',
+          cid: uid,
+          t  : 'pageview',
+          dp : encodeURIComponent(location.pathname)
+        }));
+      }
+      document.addEventListener('pjax:complete', sendPageView);
+      sendPageView();
+    </script>
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">土丘上的蒲公英</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">努力绽放，随风飘扬</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ObjC-%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">-ObjC 的意义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E8%AF%AD%E8%A8%80%E7%9A%84%E9%93%BE%E6%8E%A5"><span class="nav-number">2.</span> <span class="nav-text">静态语言的链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E8%AF%AD%E8%A8%80%E7%9A%84%E9%93%BE%E6%8E%A5"><span class="nav-number">3.</span> <span class="nav-text">动态语言的链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Other-linker-flags"><span class="nav-number">4.</span> <span class="nav-text">Other linker flags</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linker-flags-list"><span class="nav-number">5.</span> <span class="nav-text">Linker flags list</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">6.</span> <span class="nav-text">最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%A7%81"><span class="nav-number">7.</span> <span class="nav-text">参见</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="William"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">William</p>
+  <div class="site-description" itemprop="description">William's blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dracarys" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dracarys" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cavalry001@hotmail.com" title="E-Mail → mailto:cavalry001@hotmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dracarys.github.io/2021/06/23/Other-linker-flags/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="William">
+      <meta itemprop="description" content="William's blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="土丘上的蒲公英">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Other linker flags
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-06-23 14:03:29 / 修改时间：17:12:27" itemprop="dateCreated datePublished" datetime="2021-06-23T14:03:29+08:00">2021-06-23</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>CocoPod 是一个了不起的工具，很多团队也都通过它实现了项目的组件化。但在使用过程中不知道你是否也遇到过链接错误的问题。通常这都是因为 CocoaPod 在生成项目时自动在 Other Linker Flags 中添加  <code>-ObjC</code> 引起，那么  <code>-ObjC</code> 这个参数具体是做什么的呢，还有哪些参数呢？</p>
+<a id="more"></a>
+
+<h2 id="ObjC-的意义"><a href="#ObjC-的意义" class="headerlink" title="-ObjC 的意义"></a>-ObjC 的意义</h2><p><code>-ObjC</code> 参数的意义是告诉链接器，将静态库中所有实现了 Objective-C 或 Category 的成员（目标文件），链接到最终的可执行文件中。那这又是为什么呢？为什么需要给这么一个选项呢？在解决这个问题之前，先来回顾一下有关链接的知识。</p>
+<h2 id="静态语言的链接"><a href="#静态语言的链接" class="headerlink" title="静态语言的链接"></a>静态语言的链接</h2><p>像 C 这样的典型静态语言，所有“源文件”都会被编译为包含着可执行函数和静态数据的“目标文件”，之后在由“链接器”负责，将这些目标文件整合为一个可执行文件。</p>
+<p>通常来说我们的工程中源文件不会只有一个，而且各个源文件之间还可能存在引用关系。例如： <code>A.c</code> 中用到了 <code>B.c</code> 中的一个名为 <code>doSomething()</code> 的函数。当编译器遇到这个函数时，它会将一个 “undefined symbol” 写入到生成的目标文件中，表示这个位置“缺少东西”。之后，当链接器遇到这个标记时，它就会知道这里有空缺需要填补。随着连接器的深入，它在<code>B.o</code> 中找到了<code>doSomething()</code> 的实现，这时它就会用这个实现的地址将 <code>A.o</code> 中的 “undefined symbol” 替换掉，从而将 <code>A.o</code> <code>B.o</code> 链接在一起。</p>
+<p>UNIX 静态库是一个目标文件的集合，只有那些可以填补“undefined symbol”（空缺）的目标文件才会被整合到最终的可执行文件中，这样做也是为了减少最终可执行文件的体积。</p>
+<h2 id="动态语言的链接"><a href="#动态语言的链接" class="headerlink" title="动态语言的链接"></a>动态语言的链接</h2><p>在当下面试都要手撕“Runtime”的时代，大家对于 Objective-C 是一门动态语言，一定不会感到陌生。那么它跟 静态语言有什么不同呢，其中一个最大的区别就是：直到方法被调用，否则在此之前无从得知这个方法的实现具体在什么位置。因此，Objective-C 的编译器也就没必要为方法设置“链接标识”了，但是类的链接标识依然存在。</p>
+<p>举例来说，假设在源文件 <code>A.m</code> 有这样一条语句 <code>[b doSomething]</code> ，那么经过编译后，<code>A.o</code> 中会有一个用来指示“ <code>b</code> 空缺”的“undefined symbol”，但方法 <code>doSomething</code> 的“undefined symbol”却不会有。</p>
+<h2 id="Other-linker-flags"><a href="#Other-linker-flags" class="headerlink" title="Other linker flags"></a>Other linker flags</h2><p>Objective-C 这种动态语言特性为我们带来了很多便利，但也存在一些弊端。例如，当我们的静态库中包含 category 时。根据前面介绍的动态语言链接特性，不难看出，category 的目标文件将不会被链接到可执行文件中，因为其它目标文件中都没有需要链接到位于 category 中的方法的“undefined symbol”。这样生成的可执行文件，在运行时就可能会出现 “selector not recognized” 的异常。</p>
+<p>综上，我们也就不难理解 <code>-ObjC</code> 的意义了。那除此之外还有没有其它标识呢？</p>
+<h2 id="Linker-flags-list"><a href="#Linker-flags-list" class="headerlink" title="Linker flags list"></a>Linker flags list</h2><p>答案是肯定的。因为我们只能让链接器覆盖大部分情况，一些边边角角的问题，还是需要人为干预。怎么干预呢，正是通过下面这些标识：</p>
+<ul>
+<li>-all_load ： 加载静态库中所有成员（简单暴力，但通常代价也不小）</li>
+<li>-force_load &lt;路径参数&gt; : 加载指定路径静态库中的所有成员（这样目标就明确多了）</li>
+<li>-arch &lt;架构名&gt;：加载指定架构的目标文件，例如：armv7，arm64，i386。</li>
+<li>-framework &lt;name[, suffix]&gt;：为链接器指定 “name.framework/name”的framework检索地址。如果指定了后缀，那么将优先检索。例如：“name.framework/name_suffix”.</li>
+</ul>
+<p>这里仅列举了部分常见的，欲了解更多，请在终端中输入 <code>man ld</code> 查阅 manpage。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>这个问题其实自己遇到很多次了，但总是看完之后，过后一段时间不用就又忘了。此外，国内中文环境越来越差，稍微有点价值的内容都被各个平台封闭在自己圈中，要不就是SEO污染，想通过搜索引擎检索到有意义的内容越来越难了。这也算是略近绵薄之力吧。</p>
+<h2 id="参见"><a href="#参见" class="headerlink" title="参见"></a>参见</h2><p><a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/qa/qa1490/_index.html#//apple_ref/doc/uid/DTS10004097">Building Objective-C static libraries with categories</a><br><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/14497872/other-linker-flags-list">Other linker flags list</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>🍺 请我喝瓶啤酒 🍺</div>
+  <button onclick="document.querySelector('.post-reward').classList.toggle('active');">
+    安排
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="William 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="William 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>William
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://dracarys.github.io/2021/06/23/Other-linker-flags/" title="Other linker flags">https://dracarys.github.io/2021/06/23/Other-linker-flags/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Objective-C/" rel="tag"><i class="fa fa-tag"></i> Objective-C</a>
+              <a href="/tags/%E8%BF%9E%E6%8E%A5%E5%99%A8/" rel="tag"><i class="fa fa-tag"></i> 连接器</a>
+              <a href="/tags/%E7%BC%96%E8%AF%91/" rel="tag"><i class="fa fa-tag"></i> 编译</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/08/20/Algorithm-club-quicksort/" rel="prev" title="【译】数据结构与算法——快速排序">
+                  <i class="fa fa-chevron-left"></i> 【译】数据结构与算法——快速排序
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">William</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.css">
+
+<script>
+NexT.utils.loadComments('#gitalk-container', () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1.7.0/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'fd3e1af6350bcf1dc613',
+      clientSecret: 'e287f5fb6f6f34cecca90124955a55fac1a59d8c',
+      repo        : 'blog_talks',
+      owner       : 'Dracarys',
+      admin       : ['Dracarys'],
+      id          : '21e919e3a83d8377a9873be9fb11cd50',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
